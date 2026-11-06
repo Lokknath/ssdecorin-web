@@ -14,6 +14,10 @@
     <script src="script.js" defer></script>
   </head>
   <body>
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+    <div class="cursor cursor-dot" aria-hidden="true"></div>
+    <div class="cursor cursor-ring" aria-hidden="true"><span>View</span></div>
+    <div class="ambient-glow" aria-hidden="true"></div>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <header class="site-header" data-header>
@@ -25,7 +29,7 @@
         <a href="#about">About</a>
         <a href="#services">Services</a>
         <a href="#process">Process</a>
-        <a class="nav-cta" href="#contact">Start a project <span aria-hidden="true">↗</span></a>
+        <a class="nav-cta magnetic fx-button" href="#contact"><span>Start a project</span><span aria-hidden="true">↗</span></a>
       </nav>
       <button class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-menu">
         <span></span><span></span>
@@ -44,26 +48,26 @@
           <div class="hero-grid" aria-hidden="true"></div>
           <div class="hero-copy">
             <p class="eyebrow hero-kicker"><span class="status-dot"></span> Independent interior expertise</p>
-            <h1 id="hero-title">Technical clarity for <em>better interiors.</em></h1>
+            <h1 id="hero-title"><span class="hero-line">Technical clarity for</span> <em class="hero-line">better interiors.</em></h1>
             <p class="hero-lede">I help homeowners and interior teams measure precisely, plan intelligently, and execute with confidence—from first drawing to final handover.</p>
             <div class="hero-actions">
-              <a class="button button-dark" href="#services">Explore services <span aria-hidden="true">↘</span></a>
-              <a class="button button-light" href="#contact">Discuss a project <span aria-hidden="true">↗</span></a>
+              <a class="button button-dark magnetic fx-button" href="#services"><span>Explore services</span><span aria-hidden="true">↘</span></a>
+              <a class="button button-light magnetic fx-button" href="#contact"><span>Discuss a project</span><span aria-hidden="true">↗</span></a>
             </div>
             <dl class="hero-stats" aria-label="Professional overview">
-              <div><dt>10+</dt><dd>Years of hands-on expertise</dd></div>
-              <div><dt>06</dt><dd>Specialist services</dd></div>
+              <div><dt data-count="10" data-suffix="+">0+</dt><dd>Years of hands-on expertise</dd></div>
+              <div><dt data-count="6" data-pad="2">00</dt><dd>Specialist services</dd></div>
               <div><dt>India</dt><dd>Remote consulting support</dd></div>
             </dl>
           </div>
 
-          <div class="portrait-stage" aria-label="Portrait of Naga Nandan">
+          <div class="portrait-stage" data-parallax aria-label="Portrait of Naga Nandan">
             <div class="portrait-aura"></div>
             <img src="assets/naga-nandan-headshot.png" alt="Naga Nandan in a dark suit" width="1280" height="1204" />
             <div class="portrait-note">
               <span>Available for select projects</span>
               <strong>Practical guidance.<br />Precise execution.</strong>
-              <a href="#contact" aria-label="Discuss your project with Naga Nandan">↗</a>
+            <a class="magnetic" href="#contact" aria-label="Discuss your project with Naga Nandan">↗</a>
             </div>
           </div>
         </div>
@@ -100,7 +104,7 @@
         </div>
 
         <div class="service-grid">
-          <article class="service-card service-card-featured reveal spotlight-card">
+          <article class="service-card service-card-featured reveal spotlight-card tilt-card" data-cursor="Explore">
             <div class="card-top"><span>01</span><span class="service-icon" aria-hidden="true">⌁</span></div>
             <div>
               <h3>Site Measurement</h3>
@@ -110,31 +114,31 @@
             <a href="#contact" data-service="Site Measurement">Request this service <span aria-hidden="true">↗</span></a>
           </article>
 
-          <article class="service-card reveal spotlight-card">
+          <article class="service-card reveal spotlight-card tilt-card" data-cursor="Review">
             <div class="card-top"><span>02</span><span class="service-icon" aria-hidden="true">◉</span></div>
             <div><h3>Interio Check</h3><p>An independent technical review of quotations, BOQs, materials, hardware, workmanship, installation quality, and project snags.</p></div>
             <a href="#contact" data-service="Interio Check">Request a review <span aria-hidden="true">↗</span></a>
           </article>
 
-          <article class="service-card reveal spotlight-card">
+          <article class="service-card reveal spotlight-card tilt-card" data-cursor="Plan">
             <div class="card-top"><span>03</span><span class="service-icon" aria-hidden="true">⌑</span></div>
             <div><h3>Modular Drafting</h3><p>Production-ready 2D layouts and detailed drawings for kitchens, wardrobes, TV units, storage, hardware placement, and installation coordination.</p></div>
             <a href="#contact" data-service="Modular Drafting">Plan your drawings <span aria-hidden="true">↗</span></a>
           </article>
 
-          <article class="service-card reveal spotlight-card">
+          <article class="service-card reveal spotlight-card tilt-card" data-cursor="Learn">
             <div class="card-top"><span>04</span><span class="service-icon" aria-hidden="true">△</span></div>
             <div><h3>Interior Training</h3><p>Practical learning in modular construction, costing, BOQs, materials, measurement, drafting, execution, and vendor coordination.</p></div>
             <a href="#contact" data-service="Interior Training">Explore training <span aria-hidden="true">↗</span></a>
           </article>
 
-          <article class="service-card reveal spotlight-card">
+          <article class="service-card reveal spotlight-card tilt-card" data-cursor="Source">
             <div class="card-top"><span>05</span><span class="service-icon" aria-hidden="true">⌘</span></div>
             <div><h3>Vendor Directory</h3><p>Category-wise and city-wise sourcing support for materials, manufacturers, installers, and skilled interior service professionals.</p></div>
             <a href="#contact" data-service="Vendor Directory">Find the right vendor <span aria-hidden="true">↗</span></a>
           </article>
 
-          <article class="service-card service-card-dark reveal spotlight-card">
+          <article class="service-card service-card-dark reveal spotlight-card tilt-card" data-cursor="Consult">
             <div class="card-top"><span>06</span><span class="service-icon" aria-hidden="true">◇</span></div>
             <div><h3>Homeowner Consultant</h3><p>Independent guidance for budget feasibility, BOQ review, material selection, vendor comparison, inspections, snag tracking, and handover.</p></div>
             <a href="#contact" data-service="Homeowner Consultant">Get independent guidance <span aria-hidden="true">↗</span></a>
@@ -196,7 +200,7 @@
             </div>
             <label><span>Service needed</span><select name="service" required><option value="">Choose a service</option><option>Site Measurement</option><option>Interio Check</option><option>Modular Drafting</option><option>Interior Training</option><option>Vendor Directory</option><option>Homeowner Consultant</option><option>Not sure yet</option></select></label>
             <label><span>Project details</span><textarea name="details" required rows="4" placeholder="Property type, approximate area, current stage, and what you need help with"></textarea></label>
-            <button class="button button-dark" type="submit">Prepare my project brief <span aria-hidden="true">↗</span></button>
+            <button class="button button-dark magnetic fx-button" type="submit"><span>Prepare my project brief</span><span aria-hidden="true">↗</span></button>
             <p class="form-note" id="form-note" role="status">Your information stays in your browser until you choose to copy the finished brief.</p>
           </form>
         </div>
@@ -210,12 +214,26 @@
       <div class="footer-bottom"><span>© <span id="year"></span> Naga Nandan</span><a href="#top">Back to top ↑</a></div>
     </footer>
 
+    <a
+      class="whatsapp-cta magnetic"
+      href="https://wa.me/916363313546?text=Hello%20Naga%20Nandan%2C%20I%27d%20like%20to%20discuss%20an%20interior%20project."
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Message Naga Nandan on WhatsApp at 6363313546"
+    >
+      <span class="whatsapp-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" role="img"><path d="M16 3A12.8 12.8 0 0 0 5.1 22.5L3.4 29l6.7-1.7A13 13 0 1 0 16 3Zm0 23.3c-2 0-3.9-.5-5.5-1.5l-.4-.2-3.9 1 1-3.8-.3-.4A10.2 10.2 0 1 1 16 26.3Zm5.6-7.6c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.7.1-1.8-.9-3-1.6-4.2-3.7-.3-.5.3-.5.9-1.6.1-.2.1-.4 0-.6l-1-2.3c-.3-.6-.5-.6-.7-.6h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9 0 1.7 1.2 3.4 1.4 3.6.2.2 2.5 3.8 6 5.3.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 1.8-.7 2.1-1.5.3-.7.3-1.4.2-1.5-.2-.2-.4-.3-.8-.4Z"/></svg>
+      </span>
+      <span class="whatsapp-copy"><small>Quick enquiry</small><strong>Message on WhatsApp</strong></span>
+      <span class="whatsapp-arrow" aria-hidden="true">↗</span>
+    </a>
+
     <dialog class="brief-dialog" id="brief-dialog">
       <button class="dialog-close" type="button" aria-label="Close dialog">×</button>
       <p class="eyebrow">Your project brief</p>
       <h2>Ready to share.</h2>
       <pre id="brief-output"></pre>
-      <button class="button button-dark" id="copy-brief" type="button">Copy brief <span aria-hidden="true">⧉</span></button>
+      <button class="button button-dark fx-button" id="copy-brief" type="button"><span>Copy brief</span><span aria-hidden="true">⧉</span></button>
       <p class="dialog-status" id="dialog-status" role="status"></p>
     </dialog>
   </body>
