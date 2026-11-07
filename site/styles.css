@@ -439,35 +439,17 @@ html:not(.js) .preloader { display: none; }
 
 .hero-portrait { display: block; width: 100%; height: auto; }
 .hero-portrait.photo {
-  filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5));
+  filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65));
   position: relative;
-  z-index: 1;
+  z-index: 2;
   opacity: 1 !important;
   visibility: visible !important;
   -webkit-clip-path: none !important;
   clip-path: none !important;
+  transform-origin: 50% 90%;
+  will-change: transform, opacity;
 }
-.hero-portrait.bp {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-  z-index: 2;
-  mix-blend-mode: screen;
-  opacity: 0;
-}
-.scan {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0;
-  background: linear-gradient(90deg, transparent calc(100% - 60px), rgba(241, 224, 184, 0.75) calc(100% - 2px), #fff calc(100% - 1px), transparent 100%);
-  transform: translateX(-100%);
-}
-.lens-wrap, .lens-ring { display: none !important; }
+.hero-portrait.bp, .scan, .lens-wrap, .lens-ring { display: none !important; }
 
 /* orbiting service circles — they sit behind the portrait */
 .orbit { position: absolute; z-index: 2; left: 9%; top: 6%; width: 82%; aspect-ratio: 1; container-type: inline-size; animation: spin 80s linear infinite; pointer-events: none; }
@@ -506,27 +488,40 @@ html:not(.js) .preloader { display: none; }
 .stage-name strong { display: block; font-size: 1.05rem; line-height: 1.3; }
 .stage-name small { color: var(--brass-2); font-size: 0.85rem; font-weight: 700; }
 
-/* hero entrance choreography — swift, cohesive & architectural */
-.is-loaded .room .dr { animation: draw 0.9s var(--ease-io) calc(0.04s + var(--n, 0) * 0.06s) backwards; }
-.is-loaded .room .r-fill { animation: fadeIn 0.8s ease 0.25s backwards; }
-.is-loaded .halo-glow { animation: fadeIn 0.8s ease 0.25s backwards, glowPulse 7s ease-in-out 1.2s infinite; }
-.is-loaded .dim-label { animation: dimCount 1.0s var(--ease) 0.35s both, fadeIn 0.3s ease 0.35s backwards; }
-.is-loaded .pendant { animation: lampOn 1.2s linear 0.35s backwards, glowPulse 8s ease-in-out 2s infinite; }
+/* hero entrance choreography — smooth, cinematic & architectural */
+.is-loaded .room .dr { animation: draw 1.6s var(--ease-io) calc(0.1s + var(--n, 0) * 0.12s) backwards; }
+.is-loaded .room .r-fill { animation: fadeIn 1.5s ease 0.6s backwards; }
+.is-loaded .halo-glow { animation: fadeIn 1.8s ease 0.7s backwards, glowPulse 7s ease-in-out 3s infinite; }
+.is-loaded .dim-label { animation: dimCount 1.8s var(--ease) 1.2s both, fadeIn 0.5s ease 1.2s backwards; }
+.is-loaded .pendant { animation: lampOn 2.0s linear 0.9s backwards, glowPulse 8s ease-in-out 3.5s infinite; }
 @keyframes lampOn { 0% { opacity: 0; } 8% { opacity: 0.55; } 13% { opacity: 0.05; } 24% { opacity: 0.8; } 30% { opacity: 0.15; } 46% { opacity: 1; } 100% { opacity: 1; } }
-.is-loaded .hero-portrait.bp { animation: bpIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.is-loaded .scan { animation: scanX 1.05s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
-@keyframes bpIn { 
-  0% { opacity: 0; -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); } 
-  30% { opacity: 0.95; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
-  70% { opacity: 0.6; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
-  100% { opacity: 0.22; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+
+/* Hero Portrait Smooth Animation of Full Image */
+.is-loaded .hero-portrait.photo {
+  animation: portraitFullSmooth 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
 }
-@keyframes scanX { 0% { opacity: 1; transform: translateX(-100%); } 92% { opacity: 1; } 100% { opacity: 0; transform: translateX(100%); } }
-.is-loaded .orb { animation: orbOut 0.8s var(--ease) calc(0.35s + var(--i) * 0.05s) backwards; }
-.is-loaded .stage-name { animation: riseIn 0.6s var(--ease) 0.5s backwards; }
-.is-loaded .card-where { animation: riseIn 0.6s var(--ease) 0.45s backwards, bob 9s ease-in-out 1.2s infinite; }
-.is-loaded .card-price { animation: riseIn 0.6s var(--ease) 0.55s backwards, bob 8s ease-in-out 1.4s infinite; }
-.is-loaded .card-audit { animation: riseIn 0.6s var(--ease) 0.65s backwards, bob 10s ease-in-out 1.6s infinite; }
+@keyframes portraitFullSmooth {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+    filter: drop-shadow(0 10px 16px rgba(5, 8, 16, 0.2)) brightness(0.92);
+  }
+  60% {
+    opacity: 1;
+    filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) brightness(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) brightness(1);
+  }
+}
+
+.is-loaded .orb { animation: orbOut 1.1s var(--ease) calc(1.3s + var(--i) * 0.08s) backwards; }
+.is-loaded .stage-name { animation: riseIn 0.8s var(--ease) 1.5s backwards; }
+.is-loaded .card-where { animation: riseIn 0.9s var(--ease) 1.3s backwards, bob 9s ease-in-out 2.5s infinite; }
+.is-loaded .card-price { animation: riseIn 0.9s var(--ease) 1.5s backwards, bob 8s ease-in-out 2.7s infinite; }
+.is-loaded .card-audit { animation: riseIn 0.9s var(--ease) 1.7s backwards, bob 10s ease-in-out 2.9s infinite; }
 @keyframes draw { from { stroke-dashoffset: 1; } }
 @keyframes riseIn { from { opacity: 0; transform: translateY(26px); } }
 @keyframes bob { 50% { transform: translateY(-9px); } }

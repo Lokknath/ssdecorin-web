@@ -113,20 +113,21 @@ const auditEl = $('[data-preload-audit]');
 const coordsEl = $('[data-pre-coords]');
 
 function finishLoad() {
-  if (root.classList.contains('is-loaded')) return;
+  if (root.classList.contains('is-leaving')) return;
   root.classList.add('is-leaving');
-  root.classList.add('is-loaded');
-  document.dispatchEvent(new Event('decorin:loaded'));
-  setTimeout(() => $('.preloader')?.remove(), 350);
+  setTimeout(() => root.classList.add('is-loaded'), 650);
+  setTimeout(() => document.dispatchEvent(new Event('decorin:loaded')), 1200);
+  setTimeout(() => $('.preloader')?.remove(), 2000);
 }
 
 (function preload() {
   const isMobile = window.innerWidth <= 640;
-  const duration = reduced.matches ? 1 : (isMobile ? 750 : 1100); // Snappy, crisp luxury calibration
+  const duration = reduced.matches ? 1 : (isMobile ? 5500 : 7500); // Cinematic ~8s architectural calibration
   const start = performance.now();
   const pre = $('.preloader'), statusEl = $('[data-preload-status]');
   if (location.search.includes('skip_preload')) {
-    finishLoad();
+    root.classList.add('is-loaded');
+    $('.preloader')?.remove();
     return;
   }
   const steps = [
@@ -165,18 +166,14 @@ function finishLoad() {
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      setTimeout(finishLoad, 60);
+      setTimeout(finishLoad, 400);
     }
   };
   requestAnimationFrame(tick);
 
-  // Instant dismissal on any user action so the visitor is never blocked
+  // Click to skip for users who want immediate entry
   pre?.addEventListener('click', finishLoad, { once: true });
-  window.addEventListener('wheel', finishLoad, { once: true, passive: true });
-  window.addEventListener('touchmove', finishLoad, { once: true, passive: true });
-  window.addEventListener('scroll', finishLoad, { once: true, passive: true });
-  window.addEventListener('keydown', finishLoad, { once: true, passive: true });
-  setTimeout(finishLoad, 1400); // Fail-safe limit: never stall
+  setTimeout(finishLoad, 8500); // 8.5s maximum limit
 })();
 
 /* ---- Scroll: progress, ruler, rail, header state, ambient shift, process timeline ---- */
