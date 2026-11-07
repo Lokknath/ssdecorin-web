@@ -17,9 +17,13 @@ header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 
-// Load App Configuration
+// 20. Load App Configuration
 $config = file_exists(__DIR__ . '/config.php') ? require __DIR__ . '/config.php' : [];
 $primaryRecipient = $config['admin_email'] ?? 'loknath.surabhi@gmail.com';
+$adminRecipients = $config['admin_emails'] ?? [$primaryRecipient];
+if (!is_array($adminRecipients) || empty($adminRecipients)) {
+    $adminRecipients = [$primaryRecipient];
+}
 
 // Allow local and production origins for AJAX POST
 $allowedOrigins = [
@@ -447,19 +451,19 @@ if (file_exists($jsonFile)) {
 $currentData[] = &$jsonRecord;
 
 // ======================================================================
-// LAYER 2: Resend Transactional Email API (Instant 2-Second Delivery)
+// LAYER 2: Resend Transactional Email API (Instant 1-2 Second Delivery)
 // ======================================================================
 $resendSent = false;
 $resendKey = $config['resend_api_key'] ?? '';
 if (!empty($resendKey)) {
-    $resendFrom = $config['resend_from'] ?? 'Sai Sreenivasa Decorin <onboarding@resend.dev>';
+    $resendFrom = $config['resend_from'] ?? 'Sai Sreenivasa Decorin <noreply@ssdecorin.com>';
     $sandboxEmail = $config['resend_sandbox_email'] ?? '';
     
-    $sendResend = function(string $to) use ($resendKey, $resendFrom, $replyToEmail, $subject, $htmlBody, $plainBody): array {
+    $sendResend = function(array $toList) use ($resendKey, $resendFrom, $replyToEmail, $subject, $htmlBody, $plainBody): array {
         $ch = curl_init('https://api.resend.com/emails');
         $payload = json_encode([
             'from' => $resendFrom,
-            'to' => [$to],
+            'to' => array_values($toList),
             'reply_to' => $replyToEmail,
             'subject' => $subject,
             'html' => $htmlBody,
@@ -470,7 +474,8 @@ if (!empty($resendKey)) {
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $resendKey,
-                'Content-Type: application/json'
+                'Content-Type: application/json',
+                'User-Agent: curl/7.88.1'
             ],
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 4
@@ -481,13 +486,13 @@ if (!empty($resendKey)) {
         return ['code' => $httpCode, 'res' => $res];
     };
 
-    // Attempt delivery to primary recipient
-    $result = $sendResend($primaryRecipient);
+    // Attempt delivery to all configured admin recipients
+    $result = $sendResend($adminRecipients);
     if ($result['code'] >= 200 && $result['code'] < 300) {
         $resendSent = true;
-    } elseif ($result['code'] === 403 && !empty($sandboxEmail) && $sandboxEmail !== $primaryRecipient) {
-        // If Resend is in onboarding/sandbox mode, dispatch to the registered account email
-        $sandboxResult = $sendResend($sandboxEmail);
+    } elseif ($result['code'] === 403 && !empty($sandboxEmail)) {
+        // Fallback for sandbox mode if domain was not yet verified
+        $sandboxResult = $sendResend([$sandboxEmail]);
         if ($sandboxResult['code'] >= 200 && $sandboxResult['code'] < 300) {
             $resendSent = true;
         }
@@ -497,7 +502,14 @@ if (!empty($resendKey)) {
 // ======================================================================
 // LAYER 3: MilesWeb Standard PHP mail() Dispatch
 // ======================================================================
-$mailSent = @mail($primaryRecipient, $subject, $htmlBody, implode("\r\n", $headers));
+$mailSent = false;
+foreach ($adminRecipients as $adminAddr) {
+    if (filter_var($adminAddr, FILTER_VALIDATE_EMAIL)) {
+        if (@mail($adminAddr, $subject, $htmlBody, implode("\r\n", $headers))) {
+            $mailSent = true;
+        }
+    }
+}
 
 $delivered = ($resendSent || $mailSent);
 

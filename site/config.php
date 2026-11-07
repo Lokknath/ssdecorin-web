@@ -28,15 +28,21 @@ return [
     'admin_email' => 'loknath.surabhi@gmail.com',
     'admin_name'  => 'Sai Sreenivasa Decorin Admin',
 
+    // All admin emails that receive instant lead alerts
+    'admin_emails' => [
+        'loknath.surabhi@gmail.com',
+        'jacketking.loknath@gmail.com'
+    ],
+
     // Password to access https://ssdecorin.com/leads
     'leads_password' => 'Decorin@2026',
 
-    // Transactional Email API (Resend.com - instant 2-second delivery)
+    // Transactional Email API (Resend.com - instant 1-2 second delivery)
     'resend_api_key' => getenv('RESEND_API_KEY') ?: '',
     
-    // Resend sandbox recipient (allows instant delivery before custom domain verification)
+    // Official Verified Sender Address
+    'resend_from' => 'Sai Sreenivasa Decorin <noreply@ssdecorin.com>',
     'resend_sandbox_email' => 'jacketking.loknath@gmail.com',
-    'resend_from' => 'Sai Sreenivasa Decorin <onboarding@resend.dev>',
 
     // MilesWeb PHP mail() fallback enabled
     'use_php_mail' => true,
