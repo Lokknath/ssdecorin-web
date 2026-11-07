@@ -223,29 +223,44 @@ $currentData[] = &$jsonRecord;
 $resendSent = false;
 $resendKey = $config['resend_api_key'] ?? '';
 if (!empty($resendKey)) {
-    $ch = curl_init('https://api.resend.com/emails');
-    $payload = json_encode([
-        'from' => 'Sai Sreenivasa Decorin <onboarding@resend.dev>',
-        'to' => [$primaryRecipient],
-        'reply_to' => $replyToEmail,
-        'subject' => $subject,
-        'html' => $htmlBody
-    ]);
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_HTTPHEADER => [
-            'Authorization: Bearer ' . $resendKey,
-            'Content-Type: application/json'
-        ],
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 4
-    ]);
-    $res = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($httpCode >= 200 && $httpCode < 300) {
+    $resendFrom = $config['resend_from'] ?? 'Sai Sreenivasa Decorin <onboarding@resend.dev>';
+    $sandboxEmail = $config['resend_sandbox_email'] ?? '';
+    
+    $sendResend = function(string $to) use ($resendKey, $resendFrom, $replyToEmail, $subject, $htmlBody): array {
+        $ch = curl_init('https://api.resend.com/emails');
+        $payload = json_encode([
+            'from' => $resendFrom,
+            'to' => [$to],
+            'reply_to' => $replyToEmail,
+            'subject' => $subject,
+            'html' => $htmlBody
+        ]);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $resendKey,
+                'Content-Type: application/json'
+            ],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 4
+        ]);
+        $res = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return ['code' => $httpCode, 'res' => $res];
+    };
+
+    // Attempt delivery to primary recipient
+    $result = $sendResend($primaryRecipient);
+    if ($result['code'] >= 200 && $result['code'] < 300) {
         $resendSent = true;
+    } elseif ($result['code'] === 403 && !empty($sandboxEmail) && $sandboxEmail !== $primaryRecipient) {
+        // If Resend is in onboarding/sandbox mode, dispatch to the registered account email
+        $sandboxResult = $sendResend($sandboxEmail);
+        if ($sandboxResult['code'] >= 200 && $sandboxResult['code'] < 300) {
+            $resendSent = true;
+        }
     }
 }
 
