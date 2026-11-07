@@ -883,27 +883,88 @@ $$('[data-service]').forEach((card) => card.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openService(card.dataset.service); }
 }));
 
-/* ---- Gallery lightbox ---- */
+/* ---- Gallery Filtering & Lightbox ---- */
 const lightbox = $('#lightbox');
-const lbImg = $('img', lightbox); const lbCap = $('figcaption', lightbox);
-const items = $$('[data-gallery]');
+const lbImg = $('img', lightbox);
+const lbCap = $('figcaption', lightbox);
+const galleryTabs = $$('.gallery-tab');
+const galleryItems = $$('.g-item');
+let currentVisibleItems = [...galleryItems];
 let lbIndex = 0;
-function showImage(i) {
-  lbIndex = (i + items.length) % items.length;
-  const img = $('img', items[lbIndex]);
-  lbImg.src = img.currentSrc || img.src; lbImg.alt = img.alt;
-  lbCap.textContent = `${$('figcaption', items[lbIndex]).textContent} — ${lbIndex + 1} / ${items.length}`;
+
+function filterGallery(category) {
+  galleryTabs.forEach((tab) => {
+    const isActive = tab.dataset.category === category;
+    tab.classList.toggle('is-active', isActive);
+    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+
+  galleryItems.forEach((item) => {
+    const match = (category === 'all' || item.dataset.category === category);
+    if (match) {
+      item.classList.remove('is-hidden');
+      item.removeAttribute('aria-hidden');
+    } else {
+      item.classList.add('is-hidden');
+      item.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  currentVisibleItems = galleryItems.filter((item) => !item.classList.contains('is-hidden'));
 }
-items.forEach((item, i) => {
-  item.addEventListener('click', () => { showImage(i); lightbox.showModal(); });
-  item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showImage(i); lightbox.showModal(); } });
+
+galleryTabs.forEach((tab) => {
+  tab.addEventListener('click', () => filterGallery(tab.dataset.category));
 });
-$('.lb-prev').addEventListener('click', () => showImage(lbIndex - 1));
-$('.lb-next').addEventListener('click', () => showImage(lbIndex + 1));
-lightbox.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') showImage(lbIndex - 1); if (e.key === 'ArrowRight') showImage(lbIndex + 1); });
+
+function showImage(i) {
+  if (!currentVisibleItems.length) return;
+  lbIndex = (i + currentVisibleItems.length) % currentVisibleItems.length;
+  const currentItem = currentVisibleItems[lbIndex];
+  const img = $('img', currentItem);
+  const title = $('strong', currentItem)?.textContent || '';
+  const desc = $('small', currentItem)?.textContent || '';
+  const catTag = $('.g-cat-pill', currentItem)?.textContent || '';
+
+  lbImg.src = img.currentSrc || img.src;
+  lbImg.alt = img.alt;
+  lbCap.innerHTML = `<strong>${title}</strong><small>${catTag ? catTag + ' · ' : ''}${desc} · <span class="lb-counter">${lbIndex + 1} / ${currentVisibleItems.length}</span></small>`;
+}
+
+galleryItems.forEach((item) => {
+  item.addEventListener('click', () => {
+    currentVisibleItems = galleryItems.filter((it) => !it.classList.contains('is-hidden'));
+    const idx = currentVisibleItems.indexOf(item);
+    if (idx !== -1) {
+      showImage(idx);
+      lightbox.showModal();
+    }
+  });
+  item.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      currentVisibleItems = galleryItems.filter((it) => !it.classList.contains('is-hidden'));
+      const idx = currentVisibleItems.indexOf(item);
+      if (idx !== -1) {
+        showImage(idx);
+        lightbox.showModal();
+      }
+    }
+  });
+});
+
+$('.lb-prev')?.addEventListener('click', () => showImage(lbIndex - 1));
+$('.lb-next')?.addEventListener('click', () => showImage(lbIndex + 1));
+lightbox?.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') showImage(lbIndex - 1);
+  if (e.key === 'ArrowRight') showImage(lbIndex + 1);
+});
 let touchX = 0;
-lightbox.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].clientX; }, { passive: true });
-lightbox.addEventListener('touchend', (e) => { const dx = e.changedTouches[0].clientX - touchX; if (Math.abs(dx) > 50) showImage(lbIndex + (dx < 0 ? 1 : -1)); });
+lightbox?.addEventListener('touchstart', (e) => { touchX = e.changedTouches[0].clientX; }, { passive: true });
+lightbox?.addEventListener('touchend', (e) => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) showImage(lbIndex + (dx < 0 ? 1 : -1));
+});
 
 /* ---- WhatsApp services popup (hover on desktop, click/tap everywhere) ---- */
 const waMenu = $('#wa-menu');
