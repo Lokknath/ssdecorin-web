@@ -18,12 +18,6 @@ return [
     // Sign up for free at https://resend.com (3,000 free emails/mo) and paste your key here
     'resend_api_key' => getenv('RESEND_API_KEY') ?: '',
 
-    // Telegram Instant Phone Alerts
-    // 1. Message @BotFather on Telegram -> /newbot -> get TOKEN
-    // 2. Message @userinfobot -> get your numerical Chat ID
-    'telegram_bot_token' => getenv('TELEGRAM_BOT_TOKEN') ?: '',
-    'telegram_chat_id'   => getenv('TELEGRAM_CHAT_ID') ?: '',
-
     // MilesWeb PHP mail() fallback enabled
     'use_php_mail' => true,
 

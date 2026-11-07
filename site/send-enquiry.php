@@ -250,65 +250,25 @@ if (!empty($resendKey)) {
 }
 
 // ======================================================================
-// LAYER 3: Telegram Bot Instant Phone Notification (0.5s Push Alert)
-// ======================================================================
-$telegramSent = false;
-$tgToken = $config['telegram_bot_token'] ?? '';
-$tgChat  = $config['telegram_chat_id'] ?? '';
-if (!empty($tgToken) && !empty($tgChat)) {
-    $msg = "🔔 *NEW CLIENT ENQUIRY*\n"
-         . "*Sai Sreenivasa Decorin* (ssdecorin.com)\n\n"
-         . "👤 *Client:* {$name}\n"
-         . "📍 *City:* {$city}\n"
-         . "📞 *Contact:* {$contact}\n"
-         . "🛠 *Service:* {$service}\n"
-         . "⏱ *Timeline:* {$timeline}\n"
-         . "📌 *Stage:* {$stage}\n\n"
-         . "📝 *Project Scope:*\n{$details}\n\n"
-         . "⏰ " . date('d M Y, h:i A') . " IST\n"
-         . "🔗 Dashboard: https://ssdecorin.com/leads";
-
-    $ch = curl_init("https://api.telegram.org/bot{$tgToken}/sendMessage");
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query([
-            'chat_id' => $tgChat,
-            'text' => $msg,
-            'parse_mode' => 'Markdown'
-        ]),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 3
-    ]);
-    curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($httpCode === 200) {
-        $telegramSent = true;
-    }
-}
-
-// ======================================================================
-// LAYER 4: MilesWeb Standard PHP mail() Dispatch
+// LAYER 3: MilesWeb Standard PHP mail() Dispatch
 // ======================================================================
 $mailSent = @mail($primaryRecipient, $subject, $htmlBody, implode("\r\n", $headers));
 
-$delivered = ($resendSent || $telegramSent || $mailSent);
+$delivered = ($resendSent || $mailSent);
 
 // Finalize log records with delivery outcome
 $jsonRecord['status'] = $delivered ? 'SENT' : 'LOGGED_ONLY';
 $jsonRecord['dispatched_via'] = [
     'resend' => $resendSent,
-    'telegram' => $telegramSent,
     'php_mail' => $mailSent
 ];
 @file_put_contents($jsonFile, json_encode($currentData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
 
 $logEntry = sprintf(
-    "[%s] Status: %s | Resend: %s | Telegram: %s | Mail: %s | Name: %s | City: %s | Contact: %s | Service: %s\n",
+    "[%s] Status: %s | Resend: %s | Mail: %s | Name: %s | City: %s | Contact: %s | Service: %s\n",
     date('Y-m-d H:i:s'),
     $delivered ? 'SENT' : 'LOGGED_ONLY',
     $resendSent ? 'YES' : 'NO',
-    $telegramSent ? 'YES' : 'NO',
     $mailSent ? 'YES' : 'NO',
     $name,
     $city,
