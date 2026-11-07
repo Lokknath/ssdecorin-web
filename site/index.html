@@ -43,9 +43,9 @@
     <link rel="preload" href="assets/fonts/satoshi-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="assets/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap" />
-    <link rel="stylesheet" href="styles.css?v=20261107-1815" />
+    <link rel="stylesheet" href="styles.css?v=20261107-1830" />
     <script>document.documentElement.classList.add('js');</script>
-    <script src="script.js?v=20261107-1815" defer></script>
+    <script src="script.js?v=20261107-1830" defer></script>
   </head>
   <body>
     <!-- Icon sprite -->
@@ -300,11 +300,19 @@
             <div class="pendant" aria-hidden="true"></div>
             <div class="motes" aria-hidden="true" data-depth="0.6"></div>
 
-            <button class="portrait-btn" type="button" data-depth="0.9" aria-haspopup="dialog" aria-controls="portrait-dialog" aria-label="View Naga Nandan's profile" data-open-portrait data-cursor="Profile">
-              <img class="hero-portrait photo" src="assets/hero-portrait.png?v=20261107-1815" alt="Naga Nandan in a navy blazer and black turtleneck" width="1200" height="1111" fetchpriority="high" />
-            </button>
-            <!-- pointer target shaped like the portrait, so the service circles stay clickable behind it -->
+            <!-- pointer target shaped like the portrait, placed first so siblings and hover states work seamlessly -->
             <i class="portrait-hit" data-depth="0.9" data-open-portrait data-cursor="View Profile" aria-hidden="true"></i>
+
+            <button class="portrait-btn" type="button" data-depth="0.9" aria-haspopup="dialog" aria-controls="portrait-dialog" aria-label="View Naga Nandan's profile" data-open-portrait data-cursor="Profile">
+              <div class="portrait-wrap">
+                <div class="portrait-aura" aria-hidden="true"></div>
+                <img class="hero-portrait photo" src="assets/hero-portrait.png?v=20261107-1830" alt="Naga Nandan in a navy blazer and black turtleneck" width="1200" height="1111" fetchpriority="high" />
+                <span class="portrait-sheen" aria-hidden="true"></span>
+                <span class="portrait-corner c-tl" aria-hidden="true"></span>
+                <span class="portrait-corner c-br" aria-hidden="true"></span>
+                <span class="portrait-datum" aria-hidden="true"><i class="datum-dot"></i> ±0.5 mm DATUM</span>
+              </div>
+            </button>
 
             <div class="orbit" role="group" aria-label="Our six services">
               <button class="orb" style="--a:0;--i:0" type="button" data-open-service="measurement" aria-label="Site Measurement — see details" data-cursor="Measurement"><span class="orb-in"><svg class="ico"><use href="#i-ruler" /></svg><em>Site Measurement</em></span></button>

@@ -431,25 +431,252 @@ html:not(.js) .preloader { display: none; }
 @keyframes mote { 0% { opacity: 0; translate: 0 0; } 15% { opacity: 0.95; } 80% { opacity: 0.6; } 100% { opacity: 0; translate: var(--dx) -440px; } }
 
 /* the portrait: blueprint lines are drawn first, the photo is scanned in behind them */
-.portrait-hit { position: absolute; z-index: 3; left: 1%; right: 1%; bottom: 0; aspect-ratio: 1200 / 1111; clip-path: polygon(27% 20%, 40% 4%, 55% 1%, 66% 21%, 67% 38%, 66% 54%, 83% 67%, 98% 79%, 100% 100%, 5% 100%, 16% 71%, 37% 60%, 32% 38%); cursor: pointer; }
-.portrait-btn { position: absolute; z-index: 3; left: 1%; right: 1%; bottom: 0; display: block; pointer-events: none; transform-origin: 50% 100%; -webkit-mask-image: linear-gradient(#000 88%, transparent 100%); mask-image: linear-gradient(#000 88%, transparent 100%); transition: transform 0.3s var(--spring), translate 0.7s var(--ease), --pl-r 0.5s var(--ease); }
-.portrait-btn.is-active, .portrait-hit:active ~ .portrait-btn { transform: scale(0.975); }
-.portrait-pulse { position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--brass); pointer-events: none; z-index: 10; animation: portraitPulse 0.7s var(--ease) forwards; }
-@keyframes portraitPulse { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; } }
+/* ---- Hero Portrait Presentation & Interactive Animations ---- */
+.portrait-hit {
+  position: absolute;
+  z-index: 4;
+  left: 1%;
+  right: 1%;
+  bottom: 0;
+  aspect-ratio: 1200 / 1111;
+  clip-path: polygon(27% 20%, 40% 4%, 55% 1%, 66% 21%, 67% 38%, 66% 54%, 83% 67%, 98% 79%, 100% 100%, 5% 100%, 16% 71%, 37% 60%, 32% 38%);
+  cursor: pointer;
+}
+
+.portrait-btn {
+  position: absolute;
+  z-index: 3;
+  left: 1%;
+  right: 1%;
+  bottom: 0;
+  display: block;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(#000 88%, transparent 100%);
+  mask-image: linear-gradient(#000 88%, transparent 100%);
+  transition: transform 0.4s var(--spring), translate 0.7s var(--ease);
+}
+.portrait-btn.is-active,
+.portrait-hit:active ~ .portrait-btn,
+.hero-stage:has(.portrait-hit:active) .portrait-btn {
+  transform: scale(0.975);
+}
+.portrait-pulse {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--brass);
+  pointer-events: none;
+  z-index: 10;
+  animation: portraitPulse 0.7s var(--ease) forwards;
+}
+@keyframes portraitPulse {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+}
+
+.portrait-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform-origin: 50% 90%;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* Luminous Architectural Backlight Aura */
+.portrait-aura {
+  position: absolute;
+  inset: 6% 12% 14% 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 65% 55% at 50% 42%, rgba(212, 176, 106, 0.28), rgba(42, 141, 110, 0.18) 50%, transparent 74%);
+  filter: blur(34px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 1.6s ease, transform 1.6s ease;
+}
+.is-loaded .portrait-aura {
+  opacity: 0.88;
+  animation: portraitAuraPulse 7s ease-in-out 1.8s infinite alternate;
+}
+@keyframes portraitAuraPulse {
+  0% {
+    transform: scale(0.94) translateY(0);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.08) translateY(-6px);
+    opacity: 0.95;
+    background: radial-gradient(ellipse 65% 55% at 50% 40%, rgba(241, 224, 184, 0.32), rgba(42, 141, 110, 0.22) 50%, transparent 74%);
+  }
+}
 
 .hero-portrait { display: block; width: 100%; height: auto; }
 .hero-portrait.photo {
-  filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65));
   position: relative;
   z-index: 2;
+  filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) drop-shadow(0 0 24px rgba(212, 176, 106, 0.12));
   opacity: 1 !important;
   visibility: visible !important;
   -webkit-clip-path: none !important;
   clip-path: none !important;
   transform-origin: 50% 90%;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
+  transition: filter 0.5s ease, transform 0.5s var(--spring);
 }
 .hero-portrait.bp, .scan, .lens-wrap, .lens-ring { display: none !important; }
+
+/* Luxury Specular Light Reflection Sweep (Masked to silhouette) */
+.portrait-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  -webkit-mask-image: url('assets/hero-portrait.png?v=20261107-1830');
+  mask-image: url('assets/hero-portrait.png?v=20261107-1830');
+  -webkit-mask-size: 100% auto;
+  mask-size: 100% auto;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: bottom center;
+  mask-position: bottom center;
+  background: linear-gradient(
+    115deg,
+    transparent 22%,
+    rgba(241, 224, 184, 0) 36%,
+    rgba(241, 224, 184, 0.22) 47%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(241, 224, 184, 0.22) 53%,
+    rgba(241, 224, 184, 0) 64%,
+    transparent 78%
+  );
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transform: translateX(-130%) skewX(-14deg);
+}
+.is-loaded .portrait-sheen {
+  animation: portraitSheen 8.5s cubic-bezier(0.4, 0, 0.2, 1) 2.5s infinite;
+}
+@keyframes portraitSheen {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.95;
+  }
+  24% {
+    transform: translateX(130%) skewX(-14deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(130%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+/* Precision CAD Architectural Corner Brackets */
+.portrait-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 5;
+  border-color: rgba(212, 176, 106, 0.6);
+  border-style: solid;
+  transition: all 0.4s var(--ease);
+  opacity: 0;
+}
+.portrait-corner.c-tl {
+  top: 15%;
+  left: 19%;
+  border-width: 1.5px 0 0 1.5px;
+}
+.portrait-corner.c-br {
+  bottom: 11%;
+  right: 14%;
+  border-width: 0 1.5px 1.5px 0;
+}
+.is-loaded .portrait-corner {
+  opacity: 0.75;
+  animation: cornerBreathe 5.5s ease-in-out 2.2s infinite alternate;
+}
+@keyframes cornerBreathe {
+  0% { opacity: 0.45; transform: scale(1); }
+  100% { opacity: 0.9; transform: scale(1.08); }
+}
+
+/* CAD Datum Accuracy Badge */
+.portrait-datum {
+  position: absolute;
+  right: 14%;
+  bottom: 7.5%;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(9, 13, 22, 0.85);
+  border: 1px solid rgba(212, 176, 106, 0.35);
+  color: var(--brass-2);
+  font-family: var(--mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.4s var(--ease);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.datum-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+  animation: datumPulse 2.4s ease-in-out infinite;
+}
+@keyframes datumPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 10px rgba(16, 185, 129, 1); }
+}
+.is-loaded .portrait-datum {
+  opacity: 0.9;
+  animation: fadeIn 1s ease 2.2s backwards;
+}
+
+/* Interactive Hover States */
+.portrait-hit:hover ~ .portrait-btn .portrait-wrap,
+.hero-stage:has(.portrait-hit:hover) .portrait-btn .portrait-wrap {
+  transform: translateY(-6px) scale(1.018);
+}
+.portrait-hit:hover ~ .portrait-btn .hero-portrait.photo,
+.hero-stage:has(.portrait-hit:hover) .portrait-btn .hero-portrait.photo {
+  filter: drop-shadow(0 34px 50px rgba(5, 8, 16, 0.8)) drop-shadow(0 0 35px rgba(212, 176, 106, 0.35)) brightness(1.04);
+}
+.portrait-hit:hover ~ .portrait-btn .portrait-sheen,
+.hero-stage:has(.portrait-hit:hover) .portrait-btn .portrait-sheen {
+  opacity: 0.95;
+}
+.portrait-hit:hover ~ .portrait-btn .portrait-corner,
+.hero-stage:has(.portrait-hit:hover) .portrait-btn .portrait-corner {
+  border-color: var(--brass);
+  box-shadow: 0 0 10px rgba(212, 176, 106, 0.5);
+  transform: scale(0.92);
+}
+.portrait-hit:hover ~ .portrait-btn .portrait-datum,
+.hero-stage:has(.portrait-hit:hover) .portrait-btn .portrait-datum {
+  background: rgba(18, 25, 38, 0.96);
+  border-color: var(--brass);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 16px rgba(212, 176, 106, 0.3);
+}
 
 /* orbiting service circles — they sit behind the portrait */
 .orbit { position: absolute; z-index: 2; left: 9%; top: 6%; width: 82%; aspect-ratio: 1; container-type: inline-size; animation: spin 80s linear infinite; pointer-events: none; }
@@ -496,7 +723,7 @@ html:not(.js) .preloader { display: none; }
 .is-loaded .pendant { animation: lampOn 2.0s linear 0.9s backwards, glowPulse 8s ease-in-out 3.5s infinite; }
 @keyframes lampOn { 0% { opacity: 0; } 8% { opacity: 0.55; } 13% { opacity: 0.05; } 24% { opacity: 0.8; } 30% { opacity: 0.15; } 46% { opacity: 1; } 100% { opacity: 1; } }
 
-/* Hero Portrait Smooth Animation of Full Image */
+/* Hero Portrait Smooth Entrance followed by Floating Breath */
 .is-loaded .hero-portrait.photo {
   animation: portraitFullSmooth 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
 }
@@ -508,12 +735,25 @@ html:not(.js) .preloader { display: none; }
   }
   60% {
     opacity: 1;
-    filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) brightness(1.02);
+    filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) drop-shadow(0 0 24px rgba(212, 176, 106, 0.12)) brightness(1.02);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) brightness(1);
+    filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.65)) drop-shadow(0 0 24px rgba(212, 176, 106, 0.12)) brightness(1);
+  }
+}
+
+/* Continuous Architectural Floating Levitation */
+.is-loaded .portrait-wrap {
+  animation: portraitFloat 6.8s ease-in-out 2.0s infinite alternate;
+}
+@keyframes portraitFloat {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-8px) scale(1.008);
   }
 }
 
