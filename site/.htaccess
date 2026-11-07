@@ -22,6 +22,13 @@ ErrorDocument 404 /404.html
   # Canonical host: redirect www.ssdecorin.com -> ssdecorin.com
   RewriteCond %{HTTP_HOST} ^www\.ssdecorin\.com$ [NC]
   RewriteRule ^ https://ssdecorin.com%{REQUEST_URI} [L,R=301]
+
+  # Protect logs and data files from direct web access
+  RewriteRule ^logs/ - [F,L]
+  RewriteRule \.(log|env)$ - [F,L]
+
+  # Clean URL: /leads -> leads.php
+  RewriteRule ^leads/?$ leads.php [L,QSA]
 </IfModule>
 
 # ----------------------------------------------------------------------
