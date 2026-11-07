@@ -972,11 +972,11 @@ let lastBrief = '';
 
 /* ---- Validation ---- */
 const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
-/** Returns { type, value } for a valid email or phone number (Indian mobiles are formatted +91 XXXXX XXXXX), otherwise null. */
-function parseContact(raw) {
+
+/** Returns formatted phone string for valid phone (Indian mobiles formatted +91 XXXXX XXXXX), or null. */
+function parsePhone(raw) {
+  if (!raw) return null;
   const v = raw.trim();
-  if (EMAIL_RE.test(v) && v.length <= 120) return { type: 'email', value: v.toLowerCase() };
-  if (/[A-Za-z@]/.test(v)) return null;
   let d = v.replace(/[\s\-().]/g, '');
   const plus = d.startsWith('+');
   d = d.replace(/^\+/, '');
@@ -984,10 +984,22 @@ function parseContact(raw) {
   if (plus && d.startsWith('91') && d.length === 12) d = d.slice(2);
   else if (!plus && d.length === 12 && d.startsWith('91')) d = d.slice(2);
   else if (!plus && d.length === 11 && d.startsWith('0')) d = d.slice(1);
-  if (d.length === 10 && /^[6-9]/.test(d)) return { type: 'phone', value: `+91 ${d.slice(0, 5)} ${d.slice(5)}` };
-  if (plus && !d.startsWith('91') && !d.startsWith('0') && d.length >= 8 && d.length <= 15) return { type: 'phone', value: `+${d}` };
+  if (d.length === 10 && /^[6-9]/.test(d)) return `+91 ${d.slice(0, 5)} ${d.slice(5)}`;
+  if (d.length === 10) return `+91 ${d.slice(0, 5)} ${d.slice(5)}`;
+  if (plus && d.length >= 8 && d.length <= 15) return `+${d}`;
+  if (d.length >= 8 && d.length <= 15) return `+${d}`;
   return null;
 }
+
+/** Returns cleaned lowercase email string or null if invalid. Empty string if omitted. */
+function parseEmail(raw) {
+  if (!raw) return '';
+  const v = raw.trim();
+  if (!v) return '';
+  if (EMAIL_RE.test(v) && v.length <= 120) return v.toLowerCase();
+  return null;
+}
+
 const RULES = {
   name: (v) => {
     const val = v.trim();
@@ -997,12 +1009,17 @@ const RULES = {
     return '';
   },
   city: (v) => (v.length >= 2 && /\p{L}{2}/u.test(v) ? '' : 'Please enter your project city.'),
-  contact: (v) => {
-    if (!v) return 'Please enter a mobile number or email address.';
-    if (parseContact(v)) return '';
-    return /[A-Za-z@]/.test(v)
-      ? 'That email looks incomplete — please use the format name@example.com.'
-      : 'Please enter a valid 10-digit mobile number (starting with 6–9), or an email address.';
+  phone: (v) => {
+    const val = v.trim();
+    if (!val) return 'Please enter your phone number so we can reach you.';
+    if (parsePhone(val)) return '';
+    return 'Please enter a valid 10-digit mobile number (e.g. 98765 43210).';
+  },
+  email: (v) => {
+    const val = v.trim();
+    if (!val) return ''; // Email is optional!
+    if (parseEmail(val) !== null) return '';
+    return 'Please enter a valid email address (e.g. name@example.com), or leave it empty.';
   },
   service: (v) => (v ? '' : 'Please select the service you need.'),
   details: (v) => (v.length >= 10 ? '' : 'Please provide a brief description of your project (at least 10 characters).')
@@ -1022,14 +1039,40 @@ function check(f, announce = true) {
 fields.forEach((f) => {
   f.input.addEventListener('blur', () => { if (f.input.value.trim() || f.field.classList.contains('invalid')) check(f); });
   f.input.addEventListener('input', () => { if (f.field.classList.contains('invalid')) check(f); });
-  f.input.addEventListener('change', () => { if (f.n === 'contact') { const p = parseContact(f.input.value); if (p) f.input.value = p.value; } });
+  f.input.addEventListener('change', () => {
+    if (f.n === 'phone') {
+      const p = parsePhone(f.input.value);
+      if (p) f.input.value = p;
+    } else if (f.n === 'email') {
+      const e = parseEmail(f.input.value);
+      if (e) f.input.value = e;
+    }
+  });
 });
 
 /* ---- Sending ---- */
 function briefFrom(data) {
-  return ['NEW ENQUIRY — SAI SREENIVASA DECORIN WEBSITE', '',
-    `Name: ${data.get('name')}`, `City: ${data.get('city')}`, `Contact: ${data.get('contact')}`, `Service: ${data.get('service')}`,
-    `Stage: ${data.get('stage') || '—'}`, `Timeline: ${data.get('timeline') || '—'}`, '', 'Project details:', String(data.get('details')).trim()].join('\n');
+  const phone = data.get('phone') || data.get('contact') || '—';
+  const email = data.get('email') || '';
+  const lines = [
+    'NEW ENQUIRY — SAI SREENIVASA DECORIN WEBSITE',
+    '',
+    `Name: ${data.get('name')}`,
+    `City: ${data.get('city')}`,
+    `Phone: ${phone}`
+  ];
+  if (email) {
+    lines.push(`Email: ${email}`);
+  }
+  lines.push(
+    `Service: ${data.get('service')}`,
+    `Stage: ${data.get('stage') || '—'}`,
+    `Timeline: ${data.get('timeline') || '—'}`,
+    '',
+    'Project details:',
+    String(data.get('details')).trim()
+  );
+  return lines.join('\n');
 }
 function showError(message, fallback) {
   errorBox.hidden = false;
@@ -1081,15 +1124,27 @@ form.addEventListener('submit', async (event) => {
     showError(problems.length === 1 ? 'Please check the highlighted field below.' : `Please check the ${problems.length} highlighted fields below.`);
     return;
   }
-  const contact = parseContact($('[name="contact"]', form).value);
-  $('[name="contact"]', form).value = contact.value;
+  const phoneVal = parsePhone($('[name="phone"]', form)?.value || '') || ($('[name="phone"]', form)?.value || '').trim();
+  if ($('[name="phone"]', form)) $('[name="phone"]', form).value = phoneVal;
+
+  const rawEmail = ($('[name="email"]', form)?.value || '').trim();
+  const emailVal = rawEmail ? (parseEmail(rawEmail) || rawEmail) : '';
+  if ($('[name="email"]', form)) $('[name="email"]', form).value = emailVal;
+
+  const contactSummary = emailVal ? `${phoneVal} · ${emailVal}` : phoneVal;
+  if ($('[name="contact"]', form)) {
+    $('[name="contact"]', form).value = contactSummary;
+  }
 
   const data = new FormData(form);
   if (data.get('_honey')) return;
-  data.append('contact_type', contact.type);
+  data.set('phone', phoneVal);
+  data.set('email', emailVal);
+  data.set('contact', contactSummary);
+  data.append('contact_type', 'phone');
   data.append('_subject', `New enquiry: ${data.get('service')} — ${data.get('name')}`);
   data.append('_template', 'table'); data.append('_captcha', 'false');
-  data.append('_replyto', contact.type === 'email' ? contact.value : '');
+  data.append('_replyto', emailVal || '');
   lastBrief = briefFrom(data);
   const label = $('.btn-label', submitBtn);
   submitBtn.classList.add('is-loading'); submitBtn.disabled = true; label.textContent = 'Sending…';

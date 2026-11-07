@@ -75,19 +75,40 @@ function stripHeaderInjection(string $val): string {
 
 $name     = cleanInput((string)($_POST['name'] ?? ''));
 $city     = cleanInput((string)($_POST['city'] ?? ''));
+$phone    = cleanInput((string)($_POST['phone'] ?? ''));
+$email    = cleanInput((string)($_POST['email'] ?? ''));
 $contact  = cleanInput((string)($_POST['contact'] ?? ''));
 $service  = cleanInput((string)($_POST['service'] ?? ''));
 $stage    = cleanInput((string)($_POST['stage'] ?? 'Not specified'));
 $timeline = cleanInput((string)($_POST['timeline'] ?? 'Not specified'));
 $details  = cleanInput((string)($_POST['details'] ?? ''));
 
-// Robust, friendly validation: only name and contact are strictly required
+// Backward compatibility: If phone is missing but contact was provided
+if ($phone === '' && $contact !== '') {
+    if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+        if ($email === '') $email = $contact;
+    } else {
+        $phone = $contact;
+    }
+}
+if ($contact === '') {
+    $contact = ($email !== '') ? "{$phone} · {$email}" : $phone;
+}
+
+// Robust, friendly validation: Name & Phone are compulsory, Email is optional
 $errors = [];
 if (mb_strlen($name) < 2) {
     $errors[] = 'Please provide a valid client name (at least 2 characters).';
 }
-if ($contact === '') {
-    $errors[] = 'Please provide a contact phone number or email address.';
+
+$cleanDigits = preg_replace('/[^0-9]/', '', $phone);
+if ($phone === '' || strlen($cleanDigits) < 8) {
+    $errors[] = 'Please provide a valid contact phone number (at least 10 digits).';
+}
+
+$cleanEmail = stripHeaderInjection($email);
+if ($cleanEmail !== '' && !filter_var($cleanEmail, FILTER_VALIDATE_EMAIL)) {
+    $errors[] = 'The email address provided is invalid. Please provide a valid email (e.g. name@example.com) or leave it empty.';
 }
 
 if (!empty($errors)) {
@@ -108,12 +129,13 @@ if ($details === '') {
 }
 
 // 4. Determine Reply-To address
-$cleanContact = stripHeaderInjection($contact);
-$replyToEmail = filter_var($cleanContact, FILTER_VALIDATE_EMAIL) ? $cleanContact : 'noreply@ssdecorin.com';
+$hasEmail = ($cleanEmail !== '' && filter_var($cleanEmail, FILTER_VALIDATE_EMAIL));
+$replyToEmail = $hasEmail ? $cleanEmail : 'noreply@ssdecorin.com';
 
 // 5. Build HTML & Plaintext Email Body
 $cleanName     = stripHeaderInjection($name);
 $cleanCity     = stripHeaderInjection($city);
+$cleanPhone    = stripHeaderInjection($phone);
 $cleanService  = stripHeaderInjection($service);
 $cleanStage    = stripHeaderInjection($stage);
 $cleanTimeline = stripHeaderInjection($timeline);
@@ -133,22 +155,20 @@ if (count($nameParts) > 1 && !empty($nameParts[count($nameParts) - 1])) {
 $initials = strtoupper($initials ?: 'SSD');
 
 // Unique Lead Tracking Reference
-$leadRef = 'SSD-' . date('ymd') . '-' . strtoupper(substr(md5($cleanName . $contact . microtime()), 0, 4));
+$leadRef = 'SSD-' . date('ymd') . '-' . strtoupper(substr(md5($cleanName . $cleanPhone . microtime()), 0, 4));
 
 // Contact Intelligence & Action Links
-$cleanDigits = preg_replace('/[^0-9]/', '', $contact);
-$hasPhone = (strlen($cleanDigits) >= 10);
+$hasPhone = (strlen($cleanDigits) >= 8);
 $waNum = '';
 if ($hasPhone) {
     $waNum = (strlen($cleanDigits) === 10) ? ('91' . $cleanDigits) : $cleanDigits;
 }
-$isEmail = (bool)filter_var($cleanContact, FILTER_VALIDATE_EMAIL);
 
 $waGreeting = rawurlencode("Hello {$cleanName}, thank you for reaching out to Sai Sreenivasa Decorin regarding your {$cleanService} project. How can we assist you?");
 $waUrl = $hasPhone ? "https://wa.me/{$waNum}?text={$waGreeting}" : "";
 $telUrl = $hasPhone ? "tel:+{$waNum}" : "";
 $mailSubjectReply = rawurlencode("Sai Sreenivasa Decorin — Regarding your {$cleanService} enquiry");
-$mailUrl = $isEmail ? "mailto:{$cleanContact}?subject={$mailSubjectReply}" : "";
+$mailUrl = $hasEmail ? "mailto:{$cleanEmail}?subject={$mailSubjectReply}" : "";
 
 // Action buttons HTML (high-contrast, touch-friendly for mobile & desktop email clients)
 $actionButtonsHtml = '';
@@ -163,7 +183,7 @@ if ($hasPhone) {
 HTML;
 }
 
-if ($isEmail) {
+if ($hasEmail) {
     $actionButtonsHtml .= <<<HTML
 <a href="{$mailUrl}" style="display:inline-block; background-color:#475569; color:#ffffff; text-decoration:none; font-size:13px; font-weight:700; padding:11px 18px; border-radius:8px; margin-right:8px; margin-bottom:8px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <span style="font-size:14px; vertical-align:middle; margin-right:4px;">✉️</span> <span style="vertical-align:middle;">Reply via Email</span>
@@ -178,15 +198,8 @@ $actionButtonsHtml .= <<<HTML
 HTML;
 
 // Formatted contact link with bold high-contrast styling
-if ($hasPhone && $isEmail) {
-    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$contact}</a>";
-} elseif ($isEmail) {
-    $contactFormatted = "<a href=\"mailto:{$cleanContact}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$cleanContact}</a>";
-} elseif ($hasPhone) {
-    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$contact}</a>";
-} else {
-    $contactFormatted = htmlspecialchars($contact);
-}
+$phoneFormatted = $hasPhone ? "<a href=\"tel:+{$waNum}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$cleanPhone}</a>" : htmlspecialchars($cleanPhone);
+$emailFormatted = $hasEmail ? "<a href=\"mailto:{$cleanEmail}\" style=\"color:#0369a1; text-decoration:none; font-weight:700; font-size:15px;\">{$cleanEmail}</a>" : "<span style=\"color:#64748b; font-style:italic;\">Not provided (optional)</span>";
 
 $plainBody = <<<TXT
 ======================================================================
@@ -198,7 +211,8 @@ CLIENT SPOTLIGHT:
 ----------------------------------------------------------------------
 Name:            {$name}
 City:            {$city}
-Contact:         {$contact}
+Phone (Req):     {$phone}
+Email (Opt):     {$cleanEmail}
 Service Needed:  {$service}
 Current Stage:   {$stage}
 Target Timeline: {$timeline}
@@ -344,9 +358,13 @@ $htmlBody = <<<HTML
                   </td>
                 </tr>
                 <tr>
-                  <td colspan="2" style="background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px 16px; vertical-align:top;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#1e40af; font-weight:800; margin-bottom:4px;">Direct Contact Detail</div>
-                    <div style="font-size:16px; color:#0369a1; font-weight:800; font-family:monospace;">{$contactFormatted}</div>
+                  <td width="50%" style="background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#1e40af; font-weight:800; margin-bottom:4px;">Phone Number (Compulsory)</div>
+                    <div style="font-size:16px; color:#0369a1; font-weight:800; font-family:monospace;">{$phoneFormatted}</div>
+                  </td>
+                  <td width="50%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; font-weight:800; margin-bottom:4px;">Email Address (Optional)</div>
+                    <div style="font-size:15px; color:#334155; font-weight:600; font-family:monospace;">{$emailFormatted}</div>
                   </td>
                 </tr>
               </table>
@@ -440,6 +458,8 @@ $jsonRecord = [
     'status' => 'NEW',
     'name' => $name,
     'city' => $city,
+    'phone' => $phone,
+    'email' => $email,
     'contact' => $contact,
     'service' => $service,
     'stage' => $stage,

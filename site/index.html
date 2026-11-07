@@ -43,9 +43,9 @@
     <link rel="preload" href="assets/fonts/satoshi-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="assets/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap" />
-    <link rel="stylesheet" href="styles.css?v=20261107-1830" />
+    <link rel="stylesheet" href="styles.css?v=20261107-2015" />
     <script>document.documentElement.classList.add('js');</script>
-    <script src="script.js?v=20261107-1830" defer></script>
+    <script src="script.js?v=20261107-2015" defer></script>
   </head>
   <body>
     <!-- Icon sprite -->
@@ -754,12 +754,15 @@
           <form class="form" id="project-form" novalidate>
             <div class="form-body">
               <div class="row">
-                <label class="field"><span>Your name</span><input name="name" autocomplete="name" maxlength="80" placeholder="e.g. Priya Sharma" required /></label>
-                <label class="field"><span>Project city</span><input name="city" autocomplete="address-level2" placeholder="e.g. Hyderabad" required /></label>
+                <label class="field"><span>Your name <abbr title="required" style="color:var(--brass); text-decoration:none;">*</abbr></span><input name="name" autocomplete="name" maxlength="80" placeholder="e.g. Priya Sharma" required /></label>
+                <label class="field"><span>Project city <abbr title="required" style="color:var(--brass); text-decoration:none;">*</abbr></span><input name="city" autocomplete="address-level2" placeholder="e.g. Hyderabad" required /></label>
               </div>
               <div class="row">
-                <label class="field"><span>Phone or email</span><input name="contact" autocomplete="email" maxlength="120" placeholder="Mobile number or email" required /></label>
-                <label class="field"><span>Service needed</span>
+                <label class="field"><span>Phone number <abbr title="required" style="color:var(--brass); text-decoration:none;">*</abbr></span><input type="tel" name="phone" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="e.g. 98765 43210 or +91 98765 43210" required /></label>
+                <label class="field"><span>Email address <small style="font-weight:400; opacity:0.75;">(optional)</small></span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" placeholder="e.g. priya@example.com" /></label>
+              </div>
+              <div class="row">
+                <label class="field"><span>Service needed <abbr title="required" style="color:var(--brass); text-decoration:none;">*</abbr></span>
                   <select name="service" required>
                     <option value="">Choose a service</option>
                     <option>Site Measurement</option>
@@ -771,9 +774,7 @@
                     <option>Not sure yet</option>
                   </select>
                 </label>
-              </div>
-              <div class="row">
-                <label class="field"><span>Project stage (optional)</span>
+                <label class="field"><span>Project stage <small style="font-weight:400; opacity:0.75;">(optional)</small></span>
                   <select name="stage">
                     <option value="">Select a stage</option>
                     <option>Planning</option>
@@ -782,9 +783,10 @@
                     <option>Handover / snagging</option>
                   </select>
                 </label>
-                <label class="field"><span>Timeline (optional)</span><input name="timeline" placeholder="e.g. within 3 weeks" /></label>
               </div>
-              <label class="field"><span>What do you need help with?</span><textarea name="details" rows="4" maxlength="2000" placeholder="e.g. 3BHK flat, 1,450 sq ft. Need a measurement report before the designer starts." required></textarea></label>
+              <label class="field"><span>Timeline <small style="font-weight:400; opacity:0.75;">(optional)</small></span><input name="timeline" placeholder="e.g. within 3 weeks" /></label>
+              <label class="field"><span>What do you need help with? <abbr title="required" style="color:var(--brass); text-decoration:none;">*</abbr></span><textarea name="details" rows="4" maxlength="2000" placeholder="e.g. 3BHK flat, 1,450 sq ft. Need a measurement report before the designer starts." required></textarea></label>
+              <input type="hidden" name="contact" />
               <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
               <p class="form-error" role="alert" data-form-error hidden></p>
               <button class="btn btn-brass btn-lg btn-block magnetic" type="submit"><span class="btn-label">Send enquiry</span><svg class="ico arrow"><use href="#i-arrow" /></svg></button>

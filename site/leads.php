@@ -109,6 +109,8 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
 
     if ($action === 'add_lead') {
         $name = trim((string)($_POST['name'] ?? ''));
+        $phone = trim((string)($_POST['phone'] ?? ''));
+        $email = trim((string)($_POST['email'] ?? ''));
         $contact = trim((string)($_POST['contact'] ?? ''));
         $city = trim((string)($_POST['city'] ?? ''));
         $service = trim((string)($_POST['service'] ?? 'General Enquiry'));
@@ -118,17 +120,30 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
         $status = trim((string)($_POST['status'] ?? 'NEW'));
         $notes = trim((string)($_POST['notes'] ?? ''));
 
-        if ($name === '' || $contact === '') {
-            $flashMessage = 'Lead creation failed: Client name and contact details are required.';
+        if ($phone === '' && $contact !== '') {
+            if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                $email = $contact;
+            } else {
+                $phone = $contact;
+            }
+        }
+        if ($contact === '') {
+            $contact = ($email !== '') ? "{$phone} · {$email}" : $phone;
+        }
+
+        if ($name === '' || $phone === '') {
+            $flashMessage = 'Lead creation failed: Client name and phone number are required.';
             $flashType = 'error';
         } else {
-            $leadId = 'SSD-' . date('ymd') . '-' . strtoupper(substr(md5($name . $contact . microtime()), 0, 4));
+            $leadId = 'SSD-' . date('ymd') . '-' . strtoupper(substr(md5($name . $phone . microtime()), 0, 4));
             $newLead = [
                 'id' => $leadId,
                 'timestamp' => date('c'),
                 'status' => $status,
                 'name' => $name,
                 'city' => $city ?: 'Not specified',
+                'phone' => $phone,
+                'email' => $email,
                 'contact' => $contact,
                 'service' => $service,
                 'stage' => $stage,
@@ -260,7 +275,8 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
                     foreach ($leads as $idx => $lead) {
                         $lid = strtoupper(trim((string)($lead['id'] ?? '')));
                         if ($lid !== '') $existingIds[$lid] = $idx;
-                        $cKey = strtolower(trim((string)($lead['contact'] ?? ''))) . '|' . strtolower(trim((string)($lead['name'] ?? '')));
+                        $cContact = trim((string)($lead['phone'] ?? $lead['contact'] ?? ''));
+                        $cKey = strtolower($cContact) . '|' . strtolower(trim((string)($lead['name'] ?? '')));
                         if ($cKey !== '|') $existingContacts[$cKey] = $idx;
                     }
 
@@ -271,7 +287,7 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
                     foreach ($importedData as $item) {
                         if (!is_array($item)) continue;
                         $itemId = strtoupper(trim((string)($item['id'] ?? '')));
-                        $itemContact = trim((string)($item['contact'] ?? ''));
+                        $itemContact = trim((string)($item['phone'] ?? $item['contact'] ?? ''));
                         $itemName = trim((string)($item['name'] ?? ''));
                         $cKey = strtolower($itemContact) . '|' . strtolower($itemName);
 
@@ -388,15 +404,27 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
     header('Content-Disposition: attachment; filename="ssdecorin_leads_' . date('Y-m-d_His') . '.csv"');
     $out = fopen('php://output', 'w');
     fputs($out, "\xEF\xBB\xBF");
-    fputcsv($out, ['Lead ID', 'Date & Time (IST)', 'Client Name', 'Contact', 'City', 'Service Needed', 'Project Stage', 'Timeline', 'Scope Details', 'Status', 'Admin Notes', 'Source', 'IP Address']);
+    fputcsv($out, ['Lead ID', 'Date & Time (IST)', 'Client Name', 'Phone', 'Email', 'Contact (Combined)', 'City', 'Service Needed', 'Project Stage', 'Timeline', 'Scope Details', 'Status', 'Admin Notes', 'Source', 'IP Address']);
     foreach ($enquiries as $row) {
         $ts = !empty($row['timestamp']) ? strtotime((string)$row['timestamp']) : time();
         $dateIst = date('d M Y, h:i A', $ts) . ' IST';
+        $rPhone = $row['phone'] ?? '';
+        $rEmail = $row['email'] ?? '';
+        $rContact = $row['contact'] ?? '';
+        if ($rPhone === '' && $rEmail === '' && $rContact !== '') {
+            if (filter_var($rContact, FILTER_VALIDATE_EMAIL)) {
+                $rEmail = $rContact;
+            } else {
+                $rPhone = $rContact;
+            }
+        }
         fputcsv($out, [
             $row['id'] ?? '',
             $dateIst,
             $row['name'] ?? '',
-            $row['contact'] ?? '',
+            $rPhone,
+            $rEmail,
+            $rContact,
             $row['city'] ?? '',
             $row['service'] ?? '',
             $row['stage'] ?? '',
@@ -1251,7 +1279,16 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
                 $idx = (int)($row['_index'] ?? 0);
                 $name = htmlspecialchars((string)($row['name'] ?? 'Anonymous'));
                 $city = htmlspecialchars((string)($row['city'] ?? 'Not specified'));
+                $phone = htmlspecialchars((string)($row['phone'] ?? ''));
+                $email = htmlspecialchars((string)($row['email'] ?? ''));
                 $contact = htmlspecialchars((string)($row['contact'] ?? ''));
+                if ($phone === '' && $email === '' && $contact !== '') {
+                  if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                    $email = $contact;
+                  } else {
+                    $phone = $contact;
+                  }
+                }
                 $service = htmlspecialchars((string)($row['service'] ?? 'General Enquiry'));
                 $stage = htmlspecialchars((string)($row['stage'] ?? ''));
                 $timeline = htmlspecialchars((string)($row['timeline'] ?? ''));
@@ -1273,13 +1310,11 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
                 $dateFormatted = date('d M Y', $ts);
                 $timeFormatted = date('h:i A', $ts) . ' IST';
 
-                $cleanDigits = preg_replace('/[^0-9]/', '', $contact);
-                if (strlen($cleanDigits) === 10) {
-                  $waNum = '91' . $cleanDigits;
-                } else {
-                  $waNum = $cleanDigits;
-                }
-                $isEmail = filter_var($contact, FILTER_VALIDATE_EMAIL);
+                $cleanDigits = preg_replace('/[^0-9]/', '', $phone ?: $contact);
+                $hasPhone = (strlen($cleanDigits) >= 8);
+                $waNum = (strlen($cleanDigits) === 10) ? ('91' . $cleanDigits) : $cleanDigits;
+                $isEmail = filter_var($email ?: $contact, FILTER_VALIDATE_EMAIL);
+                $validEmail = $isEmail ? ($email ?: $contact) : '';
                 $waText = rawurlencode("Hello {$name}, thank you for contacting Sai Sreenivasa Decorin regarding your {$service} project. We would be happy to assist you!");
               ?>
               <tr class="lead-row" data-status="<?= $displayStatus ?>" data-service="<?= htmlspecialchars($service) ?>" data-lead-id="<?= $id ?>" data-lead-index="<?= $idx ?>">
@@ -1291,9 +1326,18 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
                 <td>
                   <div class="lead-name"><?= $name ?></div>
                   <div class="lead-city">&#x1F4CD; <?= $city ?></div>
-                  <div class="lead-contact"><?= $contact ?></div>
+                  <?php if ($phone): ?>
+                    <div class="lead-contact">📞 <?= $phone ?></div>
+                  <?php elseif ($contact && !$isEmail): ?>
+                    <div class="lead-contact"><?= $contact ?></div>
+                  <?php endif; ?>
+                  <?php if ($email): ?>
+                    <div class="lead-contact" style="font-size:0.82rem; opacity:0.85; margin-top:2px;">✉️ <?= $email ?></div>
+                  <?php elseif ($contact && $isEmail): ?>
+                    <div class="lead-contact" style="font-size:0.82rem; opacity:0.85; margin-top:2px;">✉️ <?= $contact ?></div>
+                  <?php endif; ?>
                   <div class="contact-btns">
-                    <?php if ($cleanDigits && strlen($cleanDigits) >= 10): ?>
+                    <?php if ($hasPhone): ?>
                       <a class="c-btn c-wa" href="https://wa.me/<?= $waNum ?>?text=<?= $waText ?>" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
                         <span>WhatsApp</span>
                       </a>
@@ -1301,8 +1345,8 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
                         <span>Call</span>
                       </a>
                     <?php endif; ?>
-                    <?php if ($isEmail): ?>
-                      <a class="c-btn c-mail" href="mailto:<?= $contact ?>" title="Send email">
+                    <?php if ($validEmail): ?>
+                      <a class="c-btn c-mail" href="mailto:<?= $validEmail ?>" title="Send email">
                         <span>Email</span>
                       </a>
                     <?php endif; ?>
@@ -1381,7 +1425,16 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
             $idx = (int)($row['_index'] ?? 0);
             $name = htmlspecialchars((string)($row['name'] ?? 'Anonymous'));
             $city = htmlspecialchars((string)($row['city'] ?? 'Not specified'));
+            $phone = htmlspecialchars((string)($row['phone'] ?? ''));
+            $email = htmlspecialchars((string)($row['email'] ?? ''));
             $contact = htmlspecialchars((string)($row['contact'] ?? ''));
+            if ($phone === '' && $email === '' && $contact !== '') {
+              if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                $email = $contact;
+              } else {
+                $phone = $contact;
+              }
+            }
             $service = htmlspecialchars((string)($row['service'] ?? 'General Enquiry'));
             $stage = htmlspecialchars((string)($row['stage'] ?? ''));
             $timeline = htmlspecialchars((string)($row['timeline'] ?? ''));
@@ -1402,13 +1455,11 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
             $ts = !empty($row['timestamp']) ? strtotime((string)$row['timestamp']) : time();
             $dateFormatted = date('d M Y, h:i A', $ts) . ' IST';
 
-            $cleanDigits = preg_replace('/[^0-9]/', '', $contact);
-            if (strlen($cleanDigits) === 10) {
-              $waNum = '91' . $cleanDigits;
-            } else {
-              $waNum = $cleanDigits;
-            }
-            $isEmail = filter_var($contact, FILTER_VALIDATE_EMAIL);
+            $cleanDigits = preg_replace('/[^0-9]/', '', $phone ?: $contact);
+            $hasPhone = (strlen($cleanDigits) >= 8);
+            $waNum = (strlen($cleanDigits) === 10) ? ('91' . $cleanDigits) : $cleanDigits;
+            $isEmail = filter_var($email ?: $contact, FILTER_VALIDATE_EMAIL);
+            $validEmail = $isEmail ? ($email ?: $contact) : '';
             $waText = rawurlencode("Hello {$name}, thank you for contacting Sai Sreenivasa Decorin regarding your {$service} project. We would be happy to assist you!");
           ?>
           <div class="m-lead-card lead-row" data-status="<?= $displayStatus ?>" data-service="<?= htmlspecialchars($service) ?>" data-lead-id="<?= $id ?>" data-lead-index="<?= $idx ?>">
@@ -1429,7 +1480,16 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
               <?php if ($timeline): ?><span class="chip" style="font-size:0.74rem"><?= $timeline ?></span><?php endif; ?>
             </div>
 
-            <div class="lead-contact"><?= $contact ?></div>
+            <?php if ($phone): ?>
+              <div class="lead-contact">📞 <?= $phone ?></div>
+            <?php elseif ($contact && !$isEmail): ?>
+              <div class="lead-contact"><?= $contact ?></div>
+            <?php endif; ?>
+            <?php if ($email): ?>
+              <div class="lead-contact" style="font-size:0.82rem; opacity:0.85; margin-top:2px;">✉️ <?= $email ?></div>
+            <?php elseif ($contact && $isEmail): ?>
+              <div class="lead-contact" style="font-size:0.82rem; opacity:0.85; margin-top:2px;">✉️ <?= $contact ?></div>
+            <?php endif; ?>
 
             <?php if ($details): ?>
               <div class="m-card-scope"><?= $details ?></div>
@@ -1456,7 +1516,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
             <div style="font-size:0.76rem; color:var(--mute); margin-bottom: 0.6rem;">Received: <?= $dateFormatted ?></div>
 
             <div class="m-actions-grid">
-              <?php if ($cleanDigits && strlen($cleanDigits) >= 10): ?>
+              <?php if ($hasPhone): ?>
                 <a class="c-btn c-wa" href="https://wa.me/<?= $waNum ?>?text=<?= $waText ?>" target="_blank" rel="noopener noreferrer">
                   <span>Chat on WhatsApp</span>
                 </a>
@@ -1464,8 +1524,8 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
                   <span>Call Client</span>
                 </a>
               <?php endif; ?>
-              <?php if ($isEmail): ?>
-                <a class="c-btn c-mail" href="mailto:<?= $contact ?>">
+              <?php if ($validEmail): ?>
+                <a class="c-btn c-mail" href="mailto:<?= $validEmail ?>">
                   <span>Send Email</span>
                 </a>
               <?php endif; ?>
@@ -1558,20 +1618,12 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Contact (Phone / Email) *</label>
-            <input class="form-control" type="text" name="contact" placeholder="e.g. 9876543210 or email" required />
+            <label>Phone Number *</label>
+            <input class="form-control" type="tel" name="phone" placeholder="e.g. 9876543210" required />
           </div>
           <div class="form-group">
-            <label>Service Required</label>
-            <select class="form-control" name="service">
-              <option value="Site Measurement">Site Measurement</option>
-              <option value="Interio Check">Interio Check</option>
-              <option value="Modular Drafting">Modular Drafting</option>
-              <option value="Interior Training">Interior Training</option>
-              <option value="Vendor Directory">Vendor Directory</option>
-              <option value="Home Owner Consultant">Home Owner Consultant</option>
-              <option value="General Enquiry">General Enquiry</option>
-            </select>
+            <label>Email Address (Optional)</label>
+            <input class="form-control" type="email" name="email" placeholder="e.g. client@example.com" />
           </div>
         </div>
         <div class="form-row">
@@ -1584,15 +1636,29 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
             <input class="form-control" type="text" name="timeline" placeholder="e.g. Within 2 weeks" />
           </div>
         </div>
-        <div class="form-group">
-          <label>Initial Status</label>
-          <select class="form-control" name="status">
-            <option value="NEW">New</option>
-            <option value="CONTACTED">Contacted</option>
-            <option value="DISCUSSION">In Discussion</option>
-            <option value="CONVERTED">Converted</option>
-            <option value="CLOSED">Closed</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Service Required</label>
+            <select class="form-control" name="service">
+              <option value="Site Measurement">Site Measurement</option>
+              <option value="Interio Check">Interio Check</option>
+              <option value="Modular Drafting">Modular Drafting</option>
+              <option value="Interior Training">Interior Training</option>
+              <option value="Vendor Directory">Vendor Directory</option>
+              <option value="Home Owner Consultant">Home Owner Consultant</option>
+              <option value="General Enquiry">General Enquiry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Initial Status</label>
+            <select class="form-control" name="status">
+              <option value="NEW">New</option>
+              <option value="CONTACTED">Contacted</option>
+              <option value="DISCUSSION">In Discussion</option>
+              <option value="CONVERTED">Converted</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label>Scope / Project Details</label>
