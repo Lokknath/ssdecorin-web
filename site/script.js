@@ -111,20 +111,30 @@ $$('[data-split]').forEach(splitText);
 /* ---- Preloader → page ready ---- */
 const countEl = $('[data-preload-count]');
 const barEl = $('.preloader-bar i');
+const auditEl = $('[data-preload-audit]');
+const coordsEl = $('[data-pre-coords]');
+
 function finishLoad() {
   if (root.classList.contains('is-leaving')) return;
   root.classList.add('is-leaving'); // the two doors part…
-  setTimeout(() => root.classList.add('is-loaded'), reduced.matches ? 0 : 650); // …then the hero choreography starts
-  setTimeout(() => document.dispatchEvent(new Event('decorin:loaded')), reduced.matches ? 0 : 1750);
-  setTimeout(() => $('.preloader')?.remove(), reduced.matches ? 50 : 1700); // stop its animations for good once it is hidden
+  setTimeout(() => root.classList.add('is-loaded'), reduced.matches ? 0 : 750); // …then the hero choreography starts
+  setTimeout(() => document.dispatchEvent(new Event('decorin:loaded')), reduced.matches ? 0 : 1900);
+  setTimeout(() => $('.preloader')?.remove(), reduced.matches ? 50 : 2200); // stop its animations for good once it is hidden
 }
+
 (function preload() {
-  const duration = reduced.matches ? 1 : 3800;
+  const duration = reduced.matches ? 1 : 5400; // extended slower & enjoyable CAD drafting experience
   const start = performance.now();
-  const ready = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2200))]);
+  const ready = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2600))]);
   let fontsReady = false; ready.then(() => { fontsReady = true; });
   const pre = $('.preloader'), statusEl = $('[data-preload-status]');
-  const steps = [[0, 'Taking measurements'], [0.28, 'Drafting the layout'], [0.62, 'Checking every detail'], [0.82, 'Sai Sreenivasa Decorin']];
+  const steps = [
+    [0, 'Calibrating laser measurements', 'Phase 1/4 · Calibration'],
+    [0.24, 'Drafting architectural layout', 'Phase 2/4 · Perimeter & Walls'],
+    [0.52, 'Calculating modular joinery & dimensions', 'Phase 3/4 · Technical CAD'],
+    [0.74, 'Interio Check™ quality audit: Passed', 'Phase 4/4 · Zero-Tolerance Audit'],
+    [0.88, 'Sai Sreenivasa Decorin', 'Verified & Approved · S. S. Naga Nandan']
+  ];
   let stepIdx = 0;
   const tick = (now) => {
     const t = Math.min((now - start) / duration, 1);
@@ -132,16 +142,30 @@ function finishLoad() {
     const shown = fontsReady || t < 0.9 ? eased : Math.min(eased, 0.9);
     if (countEl) countEl.textContent = Math.round(shown * 100);
     if (barEl) barEl.style.width = `${shown * 100}%`;
-    const next = steps.reduce((n, s, i) => (t >= s[0] ? i : n), 0);
-    if (next !== stepIdx && statusEl) {
-      stepIdx = next; statusEl.textContent = steps[next][1];
-      statusEl.classList.remove('is-swap'); void statusEl.offsetWidth; statusEl.classList.add('is-swap');
+    if (coordsEl) {
+      const cx = (shown * 420).toFixed(1);
+      const cy = (shown * 360).toFixed(1);
+      coordsEl.textContent = `X ${cx} · Y ${cy}`;
     }
-    if (t >= 0.82) pre?.classList.add('pre-done');
-    if (t < 1 || !fontsReady) requestAnimationFrame(tick); else setTimeout(finishLoad, reduced.matches ? 0 : 1300);
+    const next = steps.reduce((n, s, i) => (t >= s[0] ? i : n), 0);
+    if (next !== stepIdx) {
+      stepIdx = next;
+      if (statusEl) {
+        statusEl.textContent = steps[next][1];
+        statusEl.classList.remove('is-swap'); void statusEl.offsetWidth; statusEl.classList.add('is-swap');
+      }
+      if (auditEl) {
+        auditEl.textContent = steps[next][2];
+      }
+    }
+    if (t >= 0.74 && t < 0.88) pre?.classList.add('is-auditing');
+    else pre?.classList.remove('is-auditing');
+    if (t >= 0.88) pre?.classList.add('pre-done');
+    if (t < 1 || !fontsReady) requestAnimationFrame(tick);
+    else setTimeout(finishLoad, reduced.matches ? 0 : 1200);
   };
   requestAnimationFrame(tick);
-  setTimeout(finishLoad, 8500);
+  setTimeout(finishLoad, 9500);
 })();
 
 /* ---- Scroll: progress, ruler, rail, header state, ambient shift, process timeline ---- */
@@ -622,25 +646,55 @@ document.addEventListener('click', (e) => {
           const lum = (0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2]) / 255;
           dark.data[o] = lum * 26; dark.data[o + 1] = lum * 118; dark.data[o + 2] = lum * 92; dark.data[o + 3] = px[o + 3];
         }
-        const bake = (data, sel) => {
+        const toDataUrl = (imgData) => {
           const c = document.createElement('canvas'); c.width = W; c.height = H;
-          c.getContext('2d').putImageData(data, 0, 0);
-          c.toBlob((blob) => {
-            if (!blob) return;
-            const url = URL.createObjectURL(blob);
-            $$(sel).forEach((el) => {
-              el.src = url;
-              el.dataset.ready = 'true';
-            });
-            const wrap = $('.lens-wrap');
-            if (wrap && $('.lens-edge[data-ready="true"]') && $('.lens-dark[data-ready="true"]')) {
-              wrap.dataset.ready = 'true';
-            }
-          });
+          c.getContext('2d').putImageData(imgData, 0, 0);
+          return c.toDataURL('image/png');
         };
-        bake(edge, '.hero-portrait.bp, .lens-edge'); bake(dark, '.lens-dark');
+
+        const edgeUrl = toDataUrl(edge);
+        const darkUrl = toDataUrl(dark);
+
+        const btn = $('.portrait-btn');
+        if (btn && !$('.hero-portrait.bp', btn)) {
+          const bp = document.createElement('img');
+          bp.className = 'hero-portrait bp';
+          bp.alt = '';
+          bp.setAttribute('aria-hidden', 'true');
+          bp.width = 1200; bp.height = 1111;
+          bp.onerror = () => bp.remove();
+          bp.src = edgeUrl;
+          btn.appendChild(bp);
+
+          const wrap = document.createElement('span');
+          wrap.className = 'lens-wrap';
+          wrap.setAttribute('aria-hidden', 'true');
+
+          const lDark = document.createElement('img');
+          lDark.className = 'hero-portrait lens-dark';
+          lDark.alt = '';
+          lDark.width = 1200; lDark.height = 1111;
+          lDark.onerror = () => wrap.remove();
+          lDark.src = darkUrl;
+
+          const lEdge = document.createElement('img');
+          lEdge.className = 'hero-portrait lens-edge';
+          lEdge.alt = '';
+          lEdge.width = 1200; lEdge.height = 1111;
+          lEdge.onerror = () => wrap.remove();
+          lEdge.src = edgeUrl;
+
+          wrap.appendChild(lDark);
+          wrap.appendChild(lEdge);
+          btn.appendChild(wrap);
+
+          requestAnimationFrame(() => {
+            bp.classList.add('is-ready');
+            wrap.classList.add('is-ready');
+          });
+        }
       } catch {
-        // Fallback gracefully on any canvas restriction
+        // Fallback gracefully on any canvas restriction without broken images
         $$('.hero-portrait.bp, .lens-wrap').forEach((el) => el.remove());
       }
     };

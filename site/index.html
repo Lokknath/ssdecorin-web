@@ -82,28 +82,81 @@
       </defs>
     </svg>
 
-    <!-- Preloader -->
+    <!-- Preloader: Architectural CAD drafting experience -->
     <div class="preloader" aria-hidden="true">
       <i class="pre-door pre-top"></i><i class="pre-door pre-bot"></i>
       <div class="pre-vignette"></div>
-      <div class="preloader-inner">
+      <div class="preloader-inner" role="status" aria-live="polite">
+        <!-- Blueprint Title Block -->
+        <div class="pre-meta" aria-hidden="true">
+          <span class="pm-tag"><i class="pm-dot"></i> CAD · 1:50</span>
+          <span class="pm-tag">DWG: SD-2026-A1</span>
+          <span class="pm-tag">TOL: ±0.5mm</span>
+          <span class="pm-tag pm-coord" data-pre-coords>X 0.0 · Y 0.0</span>
+        </div>
+
         <div class="pre-stage">
+          <!-- Corner crosshairs for CAD registration -->
+          <span class="pre-reticle pre-ret-tl" aria-hidden="true"></span>
+          <span class="pre-reticle pre-ret-tr" aria-hidden="true"></span>
+          <span class="pre-reticle pre-ret-bl" aria-hidden="true"></span>
+          <span class="pre-reticle pre-ret-br" aria-hidden="true"></span>
+
+          <!-- Ruler axes ticks -->
+          <div class="pre-axis pre-axis-x" aria-hidden="true">
+            <span>0</span><span>1000</span><span>2000</span><span>3000</span><span>4000</span>
+          </div>
+          <div class="pre-axis pre-axis-y" aria-hidden="true">
+            <span>0</span><span>1000</span><span>2000</span><span>3000</span>
+          </div>
+
           <svg class="pre-plan" viewBox="-30 -30 700 460" focusable="false">
+            <defs>
+              <pattern id="pre-grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(212, 176, 106, 0.06)" stroke-width="0.8" />
+              </pattern>
+            </defs>
+            <rect x="-30" y="-30" width="700" height="460" fill="url(#pre-grid)" />
+
+            <!-- Room Callout Labels -->
+            <g class="pre-labels" aria-hidden="true">
+              <text x="160" y="195" class="pre-lbl">LIVING &amp; DINING · 4200mm</text>
+              <text x="445" y="210" class="pre-lbl">KITCHEN · 900mm</text>
+              <text x="315" y="325" class="pre-lbl">MASTER SUITE · 3600mm</text>
+              <!-- North Arrow -->
+              <g class="pre-north" transform="translate(615, 30)">
+                <circle cx="0" cy="0" r="14" fill="none" stroke="var(--brass)" stroke-width="1" stroke-dasharray="2 2" />
+                <path d="M0 -10L3 0H-3Z" fill="var(--brass-2)" />
+                <path d="M0 10L-3 0H3Z" fill="rgba(212, 176, 106, 0.35)" />
+                <text x="0" y="-13" text-anchor="middle" font-size="8" fill="var(--brass-2)" font-weight="700">N</text>
+              </g>
+            </g>
+
             <g style="--n:0"><path class="pp wall first" pathLength="1" d="M40 40H600V360H40Z" /><path class="pp thin" pathLength="1" d="M50 50H590V350H50Z" /></g>
             <g style="--n:1"><path class="pp wall" pathLength="1" d="M260 50V150M260 200V250M50 250H260" /><path class="pp wall" pathLength="1" d="M150 250V295M150 335V350" /><path class="pp wall" pathLength="1" d="M420 150V262M420 312V350M420 150H590" /></g>
             <g style="--n:2"><path class="pp" pathLength="1" d="M260 200H300M300 200A40 40 0 0 0 260 160" /><path class="pp" pathLength="1" d="M420 312H460M460 312A40 40 0 0 0 420 272" /><path class="pp" pathLength="1" d="M150 335H190M190 335A40 40 0 0 0 150 295" /><path class="pp" pathLength="1" d="M110 34H190V46H110ZM440 34H540V46H440ZM34 110V190H46V110ZM594 220V300H606V220Z" /></g>
             <g style="--n:3"><path class="pp" pathLength="1" d="M72 82H176V196H72ZM80 90H114V114H80ZM134 90H168V114H134Z" /><path class="pp" pathLength="1" d="M196 58H252V108H196ZM224 58V108" /><path class="pp" pathLength="1" d="M432 58H582V84H432ZM432 84H458V140H432Z" /><circle class="pp" pathLength="1" cx="500" cy="71" r="5" /><circle class="pp" pathLength="1" cx="526" cy="71" r="5" /><path class="pp" pathLength="1" d="M290 296H400V340H290ZM290 296V282H400V296" /><path class="pp" pathLength="1" d="M315 258H375V278H315Z" /><path class="pp" pathLength="1" d="M60 262H100V296H60Z" /><circle class="pp" pathLength="1" cx="122" cy="318" r="10" /></g>
             <g style="--n:4"><path class="pp dim" pathLength="1" d="M40 8H600M40 0V16M600 0V16" /><path class="pp dim" pathLength="1" d="M8 40V360M0 40H16M0 360H16" /></g>
-            <circle class="pre-pen" r="5"><animateMotion dur="2.4s" begin="0.4s" fill="freeze" path="M40 40H600V360H40Z" calcMode="linear" /><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.94;1" dur="2.4s" begin="0.4s" fill="freeze" /></circle>
+            <!-- Laser pen tracing perimeter -->
+            <circle class="pre-pen" r="6"><animateMotion dur="3.6s" begin="0.3s" fill="freeze" path="M40 40H600V360H40Z" calcMode="linear" /><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.02;0.96;1" dur="3.6s" begin="0.3s" fill="freeze" /></circle>
+            <!-- Technical inspection reticle -->
+            <g class="pre-audit-reticle" aria-hidden="true">
+              <line x1="0" y1="20" x2="0" y2="380" stroke="rgba(241, 224, 184, 0.55)" stroke-width="1.2" stroke-dasharray="3 3" />
+              <circle cx="0" cy="200" r="12" fill="none" stroke="var(--brass-2)" stroke-width="1.5" />
+              <circle cx="0" cy="200" r="3" fill="#fff" />
+            </g>
           </svg>
           <span class="pre-dim pre-dim-w" style="--to:4200"></span>
           <span class="pre-dim pre-dim-h" style="--to:3600"></span>
           <i class="pre-pulse"></i>
           <div class="pre-logo"><img src="assets/logo-full.jpg" alt="" width="880" height="640" /><i class="pre-shine"></i></div>
         </div>
-        <p class="pre-status" data-preload-status>Taking measurements</p>
+        <p class="pre-status" data-preload-status>Calibrating laser measurements</p>
         <span class="preloader-bar"><i></i></span>
-        <span class="preloader-count"><b data-preload-count>0</b>%</span>
+        <div class="preloader-footer">
+          <span class="preloader-count"><b data-preload-count>0</b>%</span>
+          <span class="preloader-audit" data-preload-audit>Phase 1/4 · Architectural Calibration</span>
+        </div>
       </div>
     </div>
 
@@ -245,11 +298,6 @@
 
             <button class="portrait-btn" type="button" data-depth="0.9" aria-haspopup="dialog" aria-controls="portrait-dialog" aria-label="View Naga Nandan's profile" data-open-portrait data-cursor="Profile">
               <img class="hero-portrait photo" src="assets/hero-portrait.png" alt="Naga Nandan in a navy blazer and black turtleneck" width="1200" height="1111" fetchpriority="high" />
-              <img class="hero-portrait bp" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="" aria-hidden="true" width="1200" height="1111" />
-              <span class="lens-wrap" aria-hidden="true">
-                <img class="hero-portrait lens-dark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="" width="1200" height="1111" />
-                <img class="hero-portrait lens-edge" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="" width="1200" height="1111" />
-              </span>
               <i class="lens-ring" aria-hidden="true"></i>
               <i class="scan" aria-hidden="true"></i>
             </button>
