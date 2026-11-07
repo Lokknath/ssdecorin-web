@@ -246,10 +246,11 @@ if ($sent) {
         'message' => 'Thank you! Your enquiry has been received and dispatched to our technical team.'
     ]);
 } else {
+    http_response_code(500);
     echo json_encode([
-        'success' => true,
+        'success' => false,
         'email_sent' => false,
         'recipient' => $primaryRecipient,
-        'message' => 'Your enquiry has been securely logged on our server. Our team will review and reach out shortly.'
+        'message' => 'Email delivery could not be confirmed. Please send your enquiry directly via WhatsApp.'
     ]);
 }

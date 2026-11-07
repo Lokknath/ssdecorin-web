@@ -597,10 +597,12 @@ html:not(.js) .preloader { display: none; }
 .field.invalid > span { color: #ff9a9a; }
 .field-msg { display: none; font-size: 0.88rem; font-weight: 600; color: #ffb4b4; line-height: 1.35; }
 .field.invalid .field-msg { display: block; animation: riseIn 0.35s var(--ease); }
-.form-fallback { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
-.form-fallback a { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.92rem; font-weight: 800; color: var(--ink); background: rgba(255, 255, 255, 0.1); border: 1px solid var(--line-2); transition: background 0.3s, color 0.3s, border-color 0.3s; }
-.form-fallback a:first-child { background: #25d366; color: #fff; border-color: #25d366; }
-.form-fallback a:hover { background: var(--brass); color: #1b1306; border-color: var(--brass); }
+.form-fallback { display: grid; gap: 0.65rem; margin-top: 0.9rem; }
+.form-fallback a { display: inline-flex; align-items: center; justify-content: center; gap: 0.65rem; padding: 0.8rem 1.4rem; border-radius: 14px; font-size: 0.96rem; font-weight: 800; text-align: center; }
+.form-fallback a:first-child { background: #25d366; color: #082813; border-color: #4ade80; box-shadow: 0 8px 24px -6px rgba(37, 211, 102, 0.45); }
+.form-fallback a:first-child:hover { background: #20ba5a; color: #fff; transform: translateY(-2px); }
+.form-fallback a:last-child { background: rgba(255, 255, 255, 0.08); color: var(--ink); border: 1px solid var(--line-2); }
+.form-fallback a:last-child:hover { background: var(--brass); color: #1b1306; }
 @keyframes shake { 25% { translate: -5px 0; } 75% { translate: 5px 0; } }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .form-error { padding: 0.8rem 1rem; border-radius: 14px; background: rgba(255, 107, 107, 0.12); border: 1px solid rgba(255, 107, 107, 0.4); color: #ffc0c0; font-size: 0.95rem; font-weight: 600; }

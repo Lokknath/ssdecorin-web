@@ -960,16 +960,25 @@ function briefFrom(data) {
     `Stage: ${data.get('stage') || '—'}`, `Timeline: ${data.get('timeline') || '—'}`, '', 'Project details:', String(data.get('details')).trim()].join('\n');
 }
 function showError(message, fallback) {
-  errorBox.hidden = false; errorBox.replaceChildren(message);
+  errorBox.hidden = false;
+  if (typeof message === 'string') {
+    errorBox.innerHTML = `<p>${message}</p>`;
+  } else {
+    errorBox.replaceChildren(message);
+  }
   if (!fallback) return;
   const row = document.createElement('div'); row.className = 'form-fallback';
   const wa = document.createElement('a');
-  wa.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lastBrief)}`; wa.target = '_blank'; wa.rel = 'noopener noreferrer';
-  wa.innerHTML = '<svg class="ico"><use href="#i-chat"></use></svg><span>Send on WhatsApp</span>';
+  wa.className = 'btn btn-brass btn-block';
+  wa.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lastBrief)}`;
+  wa.target = '_blank'; wa.rel = 'noopener noreferrer';
+  wa.innerHTML = '<svg class="ico"><use href="#i-chat"></use></svg><span>Send Enquiry on WhatsApp (+91 63633 13546)</span>';
   const mail = document.createElement('a');
-  mail.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Enquiry — Sai Sreenivasa Decorin website')}&body=${encodeURIComponent(lastBrief)}`;
-  mail.innerHTML = '<svg class="ico"><use href="#i-message"></use></svg><span>Open in my email app</span>';
+  mail.className = 'btn btn-glass btn-block';
+  mail.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Project Enquiry — Sai Sreenivasa Decorin')}&body=${encodeURIComponent(lastBrief)}`;
+  mail.innerHTML = '<svg class="ico"><use href="#i-message"></use></svg><span>Open in My Email App</span>';
   row.append(wa, mail); errorBox.append(row);
+  errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 async function sendEnquiry(data) {
   const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 12000);
@@ -980,9 +989,9 @@ async function sendEnquiry(data) {
     try {
       res = await fetch('send-enquiry.php', { method: 'POST', body: data, headers: { Accept: 'application/json' }, signal: ctrl.signal });
       json = await res.json().catch(() => ({}));
-      if (res.ok && json.success === true) return json;
+      if (res.ok && json.success === true && json.email_sent === true) return json;
     } catch {
-      // PHP endpoint not reachable (e.g. running in purely static preview), continue to fallbacks
+      // PHP endpoint not reachable or delivery failed, continue to fallbacks
     }
 
     // 2. Secondary fallback: Web3Forms if key configured
@@ -998,7 +1007,7 @@ async function sendEnquiry(data) {
     json = await res.json().catch(() => ({}));
     if (res.ok && (json.success === 'true' || json.success === true)) return json;
 
-    throw new Error('All enquiry submission channels failed.');
+    throw new Error('Email delivery could not be confirmed.');
   } finally { clearTimeout(timer); }
 }
 form.addEventListener('submit', async (event) => {
@@ -1023,8 +1032,8 @@ form.addEventListener('submit', async (event) => {
   const label = $('.btn-label', submitBtn);
   submitBtn.classList.add('is-loading'); submitBtn.disabled = true; label.textContent = 'Sending…';
   try {
-    await sendEnquiry(data);
-    $('[data-success-copy]').textContent = `Thank you, ${String(data.get('name')).split(' ')[0]} — the team will review your project and reply to ${data.get('contact')} shortly.`;
+    const res = await sendEnquiry(data);
+    $('[data-success-copy]').textContent = `Thank you, ${String(data.get('name')).split(' ')[0]} — your enquiry has been sent to our technical team (${res?.recipient || 'loknath.surabhi@gmail.com'}). We will review your project and reply to ${data.get('contact')} shortly.`;
     const waBtn = $('[data-success-wa]');
     if (waBtn) {
       waBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lastBrief)}`;
@@ -1036,7 +1045,7 @@ form.addEventListener('submit', async (event) => {
     form.classList.add('is-sent'); successBox.hidden = false; successBox.focus();
     form.reset(); fields.forEach((f) => check(f, false));
   } catch {
-    showError('Our email service isn’t responding right now, so your enquiry has not been sent. Send it another way:', true);
+    showError('Email delivery could not be confirmed right now. Please tap below to send your enquiry directly on WhatsApp:', true);
   } finally {
     submitBtn.classList.remove('is-loading'); submitBtn.disabled = false; label.textContent = 'Send enquiry';
   }
