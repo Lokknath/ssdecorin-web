@@ -123,11 +123,17 @@ function finishLoad() {
 }
 
 (function preload() {
-  const duration = reduced.matches ? 1 : 5400; // extended slower & enjoyable CAD drafting experience
+  const isMobile = window.innerWidth <= 640;
+  const duration = reduced.matches ? 1 : (isMobile ? 3200 : 5400); // brisk on mobile, extended CAD drafting on desktop
   const start = performance.now();
   const ready = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2600))]);
   let fontsReady = false; ready.then(() => { fontsReady = true; });
   const pre = $('.preloader'), statusEl = $('[data-preload-status]');
+  if (location.search.includes('skip_preload')) {
+    root.classList.add('is-loaded');
+    $('.preloader')?.remove();
+    return;
+  }
   const steps = [
     [0, 'Calibrating laser measurements', 'Phase 1/4 · Calibration'],
     [0.24, 'Drafting architectural layout', 'Phase 2/4 · Perimeter & Walls'],
@@ -702,10 +708,14 @@ const SERVICE_PHOTO = {
 const serviceKeys = Object.keys(SERVICES);
 const smTabs = $('[data-sm-tabs]');
 smTabs.innerHTML = serviceKeys.map((k) => `<button class="sm-tab" type="button" data-sm-go="${k}" aria-label="${SERVICES[k].name}"><svg class="ico"><use href="#${SERVICES[k].icon}"></use></svg><span>${SERVICES[k].name}</span></button>`).join('');
-const words = (t) => t.split(' ').map((w, i) => `<span class="sw"><span style="--w:${i}">${w}</span></span>`).join(' ');
+const words = (t) => {
+  if (window.innerWidth <= 768 || reduced.matches) return t;
+  return t.split(' ').map((w, i) => `<span class="sw"><span style="--w:${i}">${w}</span></span>`).join(' ');
+};
 let currentService = null;
 function renderService(key, dir = 1) {
   const s = SERVICES[key]; if (!s) return;
+  const isMobile = window.innerWidth <= 768;
   const idx = serviceKeys.indexOf(key), next = serviceKeys[(idx + 1) % serviceKeys.length];
   const [pid, palt] = SERVICE_PHOTO[key];
   const chips = s.audience.split(', ').map((a) => `<span class="sm-chip">${a.charAt(0).toUpperCase() + a.slice(1)}</span>`).join('');
@@ -714,8 +724,9 @@ function renderService(key, dir = 1) {
   currentService = key;
   serviceDialog.style.setProperty('--dir', dir);
   $$('.sm-tab', smTabs).forEach((t) => { const on = t.dataset.smGo === key; t.classList.toggle('is-active', on); t.setAttribute('aria-pressed', on); });
+  const imgW = isMobile ? 800 : 1400;
   serviceBody.innerHTML = `
-    <figure class="sm-cover"><img src="https://images.unsplash.com/${pid}?w=1400&q=75&auto=format&fit=crop" alt="${palt}" /><i class="sm-scan"></i></figure>
+    <figure class="sm-cover"><img src="https://images.unsplash.com/${pid}?w=${imgW}&q=75&auto=format&fit=crop" alt="${palt}" /><i class="sm-scan"></i></figure>
     <div class="sm-main">
       <div class="sm-head">
         <div class="sm-medal"><svg class="ico"><use href="#${s.icon}"></use></svg></div>
@@ -740,10 +751,11 @@ function renderService(key, dir = 1) {
         <button class="sm-next" type="button" data-sm-go="${next}"><small>Next service</small><strong>${SERVICES[next].name}</strong><svg class="ico"><use href="#i-arrow"></use></svg></button>
       </div>
     </div>`;
-  serviceDialog.scrollTo({ top: 0 });
+  serviceDialog.scrollTop = 0;
   $$('[data-cu]', serviceBody).forEach((el) => {
-    const to = Number(el.dataset.cu), t0 = performance.now() + 450;
-    if (reduced.matches) { el.textContent = to.toLocaleString('en-IN'); return; }
+    const to = Number(el.dataset.cu);
+    if (isMobile || reduced.matches) { el.textContent = to.toLocaleString('en-IN'); return; }
+    const t0 = performance.now() + 450;
     (function step(now) {
       const t = clamp((now - t0) / 1000);
       el.textContent = Math.round(to * (1 - Math.pow(1 - t, 3))).toLocaleString('en-IN');
@@ -756,21 +768,30 @@ function openService(key, from) {
   renderService(key, 1);
   serviceDialog.classList.remove('is-closing');
   serviceDialog.showModal();
-  const r = serviceDialog.getBoundingClientRect();
-  const cx = from ? from.left + from.width / 2 : innerWidth / 2, cy = from ? from.top + from.height / 2 : innerHeight / 2;
-  serviceDialog.style.setProperty('--ox', `${clamp(cx - r.left, 0, r.width)}px`);
-  serviceDialog.style.setProperty('--oy', `${clamp(cy - r.top, 0, r.height)}px`);
+  if (window.innerWidth > 768) {
+    const r = serviceDialog.getBoundingClientRect();
+    const cx = from ? from.left + from.width / 2 : innerWidth / 2, cy = from ? from.top + from.height / 2 : innerHeight / 2;
+    serviceDialog.style.setProperty('--ox', `${clamp(cx - r.left, 0, r.width)}px`);
+    serviceDialog.style.setProperty('--oy', `${clamp(cy - r.top, 0, r.height)}px`);
+  }
+  const curTab = $(`.sm-tab[data-sm-go="${key}"]`, smTabs);
+  if (curTab && smTabs) curTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 serviceDialog.addEventListener('click', (e) => {
   const go = e.target.closest('[data-sm-go]');
   if (!go || go.dataset.smGo === currentService) return;
   const dir = serviceKeys.indexOf(go.dataset.smGo) >= serviceKeys.indexOf(currentService) ? 1 : -1;
   renderService(go.dataset.smGo, dir);
+  const curTab = $(`.sm-tab[data-sm-go="${go.dataset.smGo}"]`, smTabs);
+  if (curTab && smTabs) curTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 });
 serviceDialog.addEventListener('keydown', (e) => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
   const d = e.key === 'ArrowRight' ? 1 : -1;
-  renderService(serviceKeys[(serviceKeys.indexOf(currentService) + d + serviceKeys.length) % serviceKeys.length], d);
+  const nextKey = serviceKeys[(serviceKeys.indexOf(currentService) + d + serviceKeys.length) % serviceKeys.length];
+  renderService(nextKey, d);
+  const curTab = $(`.sm-tab[data-sm-go="${nextKey}"]`, smTabs);
+  if (curTab && smTabs) curTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 });
 document.addEventListener('click', (e) => {
   const open = e.target.closest('[data-service], [data-open-service]');
