@@ -97,8 +97,28 @@ $primaryRecipient = 'loknath.surabhi@gmail.com';
 $cleanName = stripHeaderInjection($name);
 $cleanService = stripHeaderInjection($service);
 $subject = "New Enquiry: {$cleanService} — {$cleanName} (ssdecorin.com)";
-
 $dateFormatted = date('d M Y, h:i A') . ' IST';
+
+$plainBody = <<<TXT
+=====================================================
+  NEW ENQUIRY — SAI SREENIVASA DECORIN (ssdecorin.com)
+=====================================================
+
+Client Name:    {$name}
+Project City:   {$city}
+Contact:        {$contact}
+Service Needed: {$service}
+Project Stage:  {$stage}
+Timeline:       {$timeline}
+Submitted At:   {$dateFormatted}
+
+Project Scope & Details:
+-----------------------------------------------------
+{$details}
+
+=====================================================
+Dispatched via ssdecorin.com official contact portal.
+TXT;
 
 $htmlBody = <<<HTML
 <!DOCTYPE html>
@@ -149,16 +169,35 @@ $htmlBody = <<<HTML
 </html>
 HTML;
 
+$boundary = "----=_DecorinPart_" . md5(uniqid((string)mt_rand(), true));
+$msgId = "<" . time() . "." . bin2hex(random_bytes(8)) . "@ssdecorin.com>";
+
 $headers = [
     'MIME-Version: 1.0',
-    'Content-Type: text/html; charset=UTF-8',
+    'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
     'From: Sai Sreenivasa Decorin <noreply@ssdecorin.com>',
     "Reply-To: {$replyToEmail}",
-    'X-Mailer: PHP/' . phpversion()
+    'Return-Path: <noreply@ssdecorin.com>',
+    'Message-ID: ' . $msgId,
+    'Date: ' . date('r'),
+    'X-Mailer: PHP/' . phpversion(),
+    'X-Auto-Response-Suppress: All',
+    'Auto-Submitted: auto-generated',
+    'Precedence: bulk'
 ];
 
-// 6. Send email via native mail()
-$sent = @mail($primaryRecipient, $subject, $htmlBody, implode("\r\n", $headers));
+$emailContent = "--{$boundary}\r\n" .
+    "Content-Type: text/plain; charset=UTF-8\r\n" .
+    "Content-Transfer-Encoding: 8bit\r\n\r\n" .
+    $plainBody . "\r\n\r\n" .
+    "--{$boundary}\r\n" .
+    "Content-Type: text/html; charset=UTF-8\r\n" .
+    "Content-Transfer-Encoding: 8bit\r\n\r\n" .
+    $htmlBody . "\r\n\r\n" .
+    "--{$boundary}--";
+
+// 6. Send email via native mail() with strict envelope sender flag
+$sent = @mail($primaryRecipient, $subject, $emailContent, implode("\r\n", $headers), "-f noreply@ssdecorin.com");
 
 // Log submission locally on server for audit trail
 $logDir = __DIR__ . '/logs';
@@ -176,18 +215,41 @@ $logEntry = sprintf(
 );
 @file_put_contents($logDir . '/enquiries.log', $logEntry, FILE_APPEND | LOCK_EX);
 
+// Also persist structured JSON backup
+$jsonRecord = [
+    'timestamp' => date('c'),
+    'status' => $sent ? 'SENT' : 'MAIL_FAILED',
+    'name' => $name,
+    'city' => $city,
+    'contact' => $contact,
+    'service' => $service,
+    'stage' => $stage,
+    'timeline' => $timeline,
+    'details' => $details,
+    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+    'ua' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+];
+$jsonFile = $logDir . '/enquiries.json';
+$currentData = [];
+if (file_exists($jsonFile)) {
+    $currentData = json_decode((string)file_get_contents($jsonFile), true) ?: [];
+}
+$currentData[] = $jsonRecord;
+@file_put_contents($jsonFile, json_encode($currentData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+
 // 7. Output JSON result
 if ($sent) {
     echo json_encode([
         'success' => true,
-        'message' => 'Thank you! Your enquiry has been received. Our team will review the details and reach out shortly.'
+        'email_sent' => true,
+        'recipient' => $primaryRecipient,
+        'message' => 'Thank you! Your enquiry has been received and dispatched to our technical team.'
     ]);
 } else {
-    // If native mail failed (e.g., local development environment without sendmail),
-    // still return success if the log was written, or return warning so client fallback triggers.
-    // In production on MilesWeb, mail() is fully enabled.
     echo json_encode([
         'success' => true,
-        'message' => 'Your enquiry has been recorded. Our team will reach out shortly.'
+        'email_sent' => false,
+        'recipient' => $primaryRecipient,
+        'message' => 'Your enquiry has been securely logged on our server. Our team will review and reach out shortly.'
     ]);
 }

@@ -236,47 +236,54 @@
               <g class="grp" style="--n:7"><path class="dr" pathLength="1" d="M280 -10V98" /><path class="dr" pathLength="1" d="M257 98H303L316 122H244Z" /><path class="dr" pathLength="1" d="M268 122a12 12 0 0 0 24 0" /></g>
               <g class="grp" style="--n:8"><path class="dr dim" pathLength="1" d="M405 292H485M405 285V299M485 285V299" /><path class="dr dim" pathLength="1" d="M44 150V400M37 150H51M37 400H51" /></g>
             </svg>
-            <span class="dim-label dim-w" style="--to:900" aria-hidden="true"></span>
-            <span class="dim-label dim-h" style="--to:2400" aria-hidden="true"></span>
+            <span class="dim-label dim-w" style="--to:900" aria-label="900 millimeters joinery depth" data-cursor="Depth: 900mm"></span>
+            <span class="dim-label dim-h" style="--to:2400" aria-label="2400 millimeters ceiling height" data-cursor="Height: 2400mm"></span>
 
             <div class="halo" data-depth="0.5" aria-hidden="true"><div class="halo-glow"></div></div>
             <div class="pendant" aria-hidden="true"></div>
             <div class="motes" aria-hidden="true" data-depth="0.6"></div>
 
-            <button class="portrait-btn" type="button" data-depth="0.9" aria-haspopup="dialog" aria-controls="portrait-dialog" aria-label="View Naga Nandan's profile" data-open-portrait>
+            <button class="portrait-btn" type="button" data-depth="0.9" aria-haspopup="dialog" aria-controls="portrait-dialog" aria-label="View Naga Nandan's profile" data-open-portrait data-cursor="Profile">
               <img class="hero-portrait photo" src="assets/hero-portrait.png" alt="Naga Nandan in a navy blazer and black turtleneck" width="1200" height="1111" fetchpriority="high" />
-              <img class="hero-portrait bp" alt="" aria-hidden="true" width="1200" height="1111" />
-              <span class="lens-wrap" aria-hidden="true"><img class="hero-portrait lens-dark" alt="" width="1200" height="1111" /><img class="hero-portrait lens-edge" alt="" width="1200" height="1111" /></span>
+              <img class="hero-portrait bp" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1111'%3E%3C/svg%3E" alt="" aria-hidden="true" width="1200" height="1111" />
+              <span class="lens-wrap" aria-hidden="true">
+                <img class="hero-portrait lens-dark" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1111'%3E%3C/svg%3E" alt="" width="1200" height="1111" />
+                <img class="hero-portrait lens-edge" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1111'%3E%3C/svg%3E" alt="" width="1200" height="1111" />
+              </span>
               <i class="lens-ring" aria-hidden="true"></i>
               <i class="scan" aria-hidden="true"></i>
             </button>
             <!-- pointer target shaped like the portrait, so the service circles stay clickable behind it -->
-            <i class="portrait-hit" data-depth="0.9" data-open-portrait data-cursor="Profile" aria-hidden="true"></i>
+            <i class="portrait-hit" data-depth="0.9" data-open-portrait data-cursor="View Profile" aria-hidden="true"></i>
 
             <div class="orbit" role="group" aria-label="Our six services">
-              <button class="orb" style="--a:0;--i:0" type="button" data-open-service="measurement" aria-label="Site Measurement — see details"><span class="orb-in"><svg class="ico"><use href="#i-ruler" /></svg><em>Site Measurement</em></span></button>
-              <button class="orb" style="--a:60;--i:1" type="button" data-open-service="check" aria-label="Interio Check — see details"><span class="orb-in"><svg class="ico"><use href="#i-check-list" /></svg><em>Interio Check</em></span></button>
-              <button class="orb" style="--a:120;--i:2" type="button" data-open-service="drafting" aria-label="Modular Drafting — see details"><span class="orb-in"><svg class="ico"><use href="#i-compass" /></svg><em>Modular Drafting</em></span></button>
-              <button class="orb" style="--a:180;--i:3" type="button" data-open-service="training" aria-label="Interior Training — see details"><span class="orb-in"><svg class="ico"><use href="#i-cap" /></svg><em>Interior Training</em></span></button>
-              <button class="orb" style="--a:240;--i:4" type="button" data-open-service="vendors" aria-label="Vendor Directory — see details"><span class="orb-in"><svg class="ico"><use href="#i-pin" /></svg><em>Vendor Directory</em></span></button>
-              <button class="orb" style="--a:300;--i:5" type="button" data-open-service="consulting" aria-label="Homeowner Consultant — see details"><span class="orb-in"><svg class="ico"><use href="#i-user" /></svg><em>Homeowner Consultant</em></span></button>
+              <button class="orb" style="--a:0;--i:0" type="button" data-open-service="measurement" aria-label="Site Measurement — see details" data-cursor="Measurement"><span class="orb-in"><svg class="ico"><use href="#i-ruler" /></svg><em>Site Measurement</em></span></button>
+              <button class="orb" style="--a:60;--i:1" type="button" data-open-service="check" aria-label="Interio Check — see details" data-cursor="Interio Check"><span class="orb-in"><svg class="ico"><use href="#i-check-list" /></svg><em>Interio Check</em></span></button>
+              <button class="orb" style="--a:120;--i:2" type="button" data-open-service="drafting" aria-label="Modular Drafting — see details" data-cursor="CAD Drafting"><span class="orb-in"><svg class="ico"><use href="#i-compass" /></svg><em>Modular Drafting</em></span></button>
+              <button class="orb" style="--a:180;--i:3" type="button" data-open-service="training" aria-label="Interior Training — see details" data-cursor="Training"><span class="orb-in"><svg class="ico"><use href="#i-cap" /></svg><em>Interior Training</em></span></button>
+              <button class="orb" style="--a:240;--i:4" type="button" data-open-service="vendors" aria-label="Vendor Directory — see details" data-cursor="Vendors"><span class="orb-in"><svg class="ico"><use href="#i-pin" /></svg><em>Vendor Directory</em></span></button>
+              <button class="orb" style="--a:300;--i:5" type="button" data-open-service="consulting" aria-label="Homeowner Consultant — see details" data-cursor="Consulting"><span class="orb-in"><svg class="ico"><use href="#i-user" /></svg><em>Homeowner Consultant</em></span></button>
             </div>
 
-            <div class="card card-where glass" data-depth="1.5">
+            <div class="card card-where glass" data-depth="1.5" data-cursor="Coverage">
               <span class="card-ico"><svg class="ico"><use href="#i-globe" /></svg></span>
-              <div><strong>Online across India</strong><small>On-site in Hyderabad · Bengaluru</small></div>
+              <div>
+                <strong><span class="pulse-dot" aria-hidden="true"></span>Online across India</strong>
+                <small>On-site in Hyderabad · Bengaluru</small>
+              </div>
             </div>
-            <a class="card card-price glass" href="#pricing" data-depth="1.9">
+            <a class="card card-price glass" href="#pricing" data-depth="1.9" data-cursor="Pricing">
               <span class="card-ico"><svg class="ico"><use href="#i-rupee" /></svg></span>
               <div><small>Site measurement from</small><strong>₹4 <em>per sq. ft.</em></strong></div>
             </a>
-            <figure class="float-photo photo-a glass" data-depth="1.2">
+            <figure class="float-photo photo-a glass" data-depth="1.2" data-cursor="Joinery CAD">
               <img src="https://images.unsplash.com/photo-1632583824020-937ae9564495?w=600&q=72&auto=format&fit=crop" alt="Modern kitchen with dark cabinetry and a timber island" width="600" height="400" />
+              <span class="photo-tag">Modular Joinery · 900mm</span>
             </figure>
 
-            <div class="stage-name glass">
-              <div><strong>S. S. Naga Nandan</strong><small>Managing Partner</small></div>
-              <button class="icon-btn" type="button" aria-label="View profile" data-open-portrait><svg class="ico"><use href="#i-plus" /></svg></button>
+            <div class="stage-name glass" data-cursor="Managing Partner">
+              <div><strong>S. S. Naga Nandan</strong><small>Managing Partner · Mechanical Engineer</small></div>
+              <button class="icon-btn" type="button" aria-label="View profile" data-open-portrait data-cursor="Open"><svg class="ico"><use href="#i-plus" /></svg></button>
             </div>
           </div>
         </div>
@@ -578,11 +585,11 @@
             </div>
           </aside>
           <div class="accordion reveal">
-            <details open><summary><span class="q-ico"><svg class="ico"><use href="#i-users" /></svg></span><span class="q-text">Who do you work with?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Homeowners, interior designers, contractors, modular furniture businesses, students and professionals who need focused technical support.</p></div></details>
-            <details><summary><span class="q-ico"><svg class="ico"><use href="#i-globe" /></svg></span><span class="q-text">Can you support projects remotely?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Yes. Online consultancy covers projects across India. On-site services are available in Hyderabad and Bengaluru, depending on location and availability.</p></div></details>
-            <details><summary><span class="q-ico"><svg class="ico"><use href="#i-file" /></svg></span><span class="q-text">What should I share first?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Your city, project type, approximate area, current stage, the main challenge, the service you want and your target timeline. Each service page lists what helps most.</p></div></details>
-            <details><summary><span class="q-ico"><svg class="ico"><use href="#i-rupee" /></svg></span><span class="q-text">How is a service priced?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Site measurement is ₹4 per sq. ft. (minimum booking ₹3,000). Homeowner consulting is 10% of total project cost online or 15% on-site. Other services are quoted by scope. Taxes are extra where applicable.</p></div></details>
-            <details><summary><span class="q-ico"><svg class="ico"><use href="#i-hammer" /></svg></span><span class="q-text">Can you work alongside my own contractor?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Yes. Homeowner consulting is designed for projects built by your own vendors or contractors. You get an independent opinion on quotations, drawings, quality and handover.</p></div></details>
+            <details open><summary data-cursor="Close"><span class="q-ico"><svg class="ico"><use href="#i-users" /></svg></span><span class="q-text">Who do you work with?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Homeowners, interior designers, contractors, modular furniture businesses, students and professionals who need focused technical support.</p></div></details>
+            <details><summary data-cursor="Expand"><span class="q-ico"><svg class="ico"><use href="#i-globe" /></svg></span><span class="q-text">Can you support projects remotely?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Yes. Online consultancy covers projects across India. On-site services are available in Hyderabad and Bengaluru, depending on location and availability.</p></div></details>
+            <details><summary data-cursor="Expand"><span class="q-ico"><svg class="ico"><use href="#i-file" /></svg></span><span class="q-text">What should I share first?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Your city, project type, approximate area, current stage, the main challenge, the service you want and your target timeline. Each service page lists what helps most.</p></div></details>
+            <details><summary data-cursor="Expand"><span class="q-ico"><svg class="ico"><use href="#i-rupee" /></svg></span><span class="q-text">How is a service priced?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Site measurement is ₹4 per sq. ft. (minimum booking ₹3,000). Homeowner consulting is 10% of total project cost online or 15% on-site. Other services are quoted by scope. Taxes are extra where applicable.</p></div></details>
+            <details><summary data-cursor="Expand"><span class="q-ico"><svg class="ico"><use href="#i-hammer" /></svg></span><span class="q-text">Can you work alongside my own contractor?</span><svg class="ico q-toggle"><use href="#i-plus" /></svg></summary><div><p>Yes. Homeowner consulting is designed for projects built by your own vendors or contractors. You get an independent opinion on quotations, drawings, quality and handover.</p></div></details>
           </div>
         </div>
       </section>
@@ -647,10 +654,15 @@
             </div>
             <div class="form-success" hidden role="status" tabindex="-1">
               <div class="success-ring"><svg class="ico"><use href="#i-check" /></svg></div>
-              <h3>Enquiry sent</h3>
-              <p data-success-copy>Thank you — the team will reply soon.</p>
+              <h3>Enquiry Received</h3>
+              <p data-success-copy>Thank you — your enquiry has been dispatched to <strong>loknath.surabhi@gmail.com</strong>.</p>
+              <div class="success-alert">
+                <p><strong>Note for first-time senders:</strong> Please check your inbox (and your <strong>Spam / Junk folder</strong> if this is your first enquiry from ssdecorin.com) and click <em>"Report Not Spam"</em> so updates reach your Primary inbox.</p>
+              </div>
               <div class="success-actions">
-                <button class="btn btn-glass btn-sm" type="button" data-copy-brief><span>Copy my enquiry</span></button>
+                <a class="btn btn-brass btn-sm" data-success-wa href="#" target="_blank" rel="noopener noreferrer"><svg class="ico"><use href="#i-chat" /></svg><span>Send on WhatsApp (+91 63633 13546)</span></a>
+                <a class="btn btn-glass btn-sm" data-success-mail href="#"><svg class="ico"><use href="#i-message" /></svg><span>Open in Email App</span></a>
+                <button class="btn btn-glass btn-sm" type="button" data-copy-brief><span>Copy enquiry details</span></button>
                 <button class="btn btn-glass btn-sm" type="button" data-form-reset><span>Send another</span></button>
               </div>
             </div>

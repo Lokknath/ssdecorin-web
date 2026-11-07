@@ -370,12 +370,32 @@ if (finePointer.matches && !reduced.matches) {
   addEventListener('pointermove', (e) => { tx = e.clientX; ty = e.clientY; root.classList.remove('cursor-away'); }, { passive: true });
   root.addEventListener('pointerleave', () => root.classList.add('cursor-away'));
   document.addEventListener('pointerover', (e) => {
-    const target = e.target.closest?.('[data-cursor], a, button, summary, [role="button"], select');
+    // 1. Common questions accordion summary
+    const summary = e.target.closest?.('summary');
+    if (summary) {
+      const details = summary.closest('details');
+      const text = details?.open ? 'Close' : 'Expand';
+      cursor.classList.add('is-hot', 'is-label');
+      cursor.classList.remove('is-typing');
+      labelEl.textContent = text;
+      return;
+    }
+
+    // 2. Form text-boxes and inputs (keeps cross mouse effect active seamlessly)
+    const formInput = e.target.closest?.('input:not([type="hidden"]), textarea, select');
+    if (formInput) {
+      cursor.classList.add('is-hot', 'is-label', 'is-typing');
+      labelEl.textContent = formInput.tagName === 'SELECT' ? 'Select' : 'Type';
+      return;
+    }
+    cursor.classList.remove('is-typing');
+
+    // 3. Buttons, links, and custom tagged elements
+    const target = e.target.closest?.('[data-cursor], a, button, [role="button"]');
     const text = target?.dataset?.cursor;
     cursor.classList.toggle('is-hot', Boolean(target));
     cursor.classList.toggle('is-label', Boolean(text));
     if (text) labelEl.textContent = text;
-    root.classList.toggle('cursor-away', Boolean(e.target.closest?.('input, textarea')));
   });
   document.addEventListener('pointerdown', (e) => {
     cursor.classList.add('is-down');
@@ -550,7 +570,26 @@ function wireDialog(dlg) {
 $$('dialog').forEach(wireDialog);
 
 const portraitDialog = $('#portrait-dialog');
-document.addEventListener('click', (e) => { if (e.target.closest('[data-open-portrait]')) portraitDialog.showModal(); });
+document.addEventListener('click', (e) => {
+  const openBtn = e.target.closest('[data-open-portrait]');
+  if (openBtn) {
+    const btn = $('.portrait-btn');
+    if (btn) {
+      btn.classList.add('is-active');
+      const r = btn.getBoundingClientRect();
+      const pulse = document.createElement('span');
+      pulse.className = 'portrait-pulse';
+      const cx = e.clientX ? (e.clientX - r.left) : (r.width / 2);
+      const cy = e.clientY ? (e.clientY - r.top) : (r.height / 2);
+      pulse.style.left = `${cx}px`;
+      pulse.style.top = `${cy}px`;
+      btn.appendChild(pulse);
+      pulse.addEventListener('animationend', () => pulse.remove(), { once: true });
+      setTimeout(() => btn.classList.remove('is-active'), 300);
+    }
+    portraitDialog.showModal();
+  }
+});
 
 /* ---- Hero portrait: gold "inspection lens" follows the pointer ---- */
 (function portraitLens() {
@@ -560,37 +599,52 @@ document.addEventListener('click', (e) => { if (e.target.closest('[data-open-por
   const src = new Image();
   src.onload = () => {
     const processLens = () => {
-      const W = 560, H = Math.round((W * src.naturalHeight) / src.naturalWidth);
-      const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-      const cx = cv.getContext('2d', { willReadFrequently: true });
-      cx.drawImage(src, 0, 0, W, H);
-      const px = cx.getImageData(0, 0, W, H).data;
-      const g = new Float32Array(W * H);
-      for (let i = 0; i < W * H; i++) g[i] = ((0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) * px[i * 4 + 3]) / 65025;
-      const blur = new Float32Array(W * H);
-      for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-        const i = y * W + x;
-        blur[i] = (g[i] * 4 + g[i - 1] * 2 + g[i + 1] * 2 + g[i - W] * 2 + g[i + W] * 2 + g[i - W - 1] + g[i - W + 1] + g[i + W - 1] + g[i + W + 1]) / 16;
+      try {
+        const W = 560, H = Math.round((W * src.naturalHeight) / src.naturalWidth);
+        const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+        const cx = cv.getContext('2d', { willReadFrequently: true });
+        cx.drawImage(src, 0, 0, W, H);
+        const px = cx.getImageData(0, 0, W, H).data;
+        const g = new Float32Array(W * H);
+        for (let i = 0; i < W * H; i++) g[i] = ((0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) * px[i * 4 + 3]) / 65025;
+        const blur = new Float32Array(W * H);
+        for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+          const i = y * W + x;
+          blur[i] = (g[i] * 4 + g[i - 1] * 2 + g[i + 1] * 2 + g[i - W] * 2 + g[i + W] * 2 + g[i - W - 1] + g[i - W + 1] + g[i + W - 1] + g[i + W + 1]) / 16;
+        }
+        const edge = cx.createImageData(W, H), dark = cx.createImageData(W, H);
+        for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+          const i = y * W + x, o = i * 4;
+          const gx = blur[i + 1 - W] + 2 * blur[i + 1] + blur[i + 1 + W] - blur[i - 1 - W] - 2 * blur[i - 1] - blur[i - 1 + W];
+          const gy = blur[i + W - 1] + 2 * blur[i + W] + blur[i + W + 1] - blur[i - W - 1] - 2 * blur[i - W] - blur[i - W + 1];
+          const a = clamp((Math.hypot(gx, gy) - 0.05) * 5.5);
+          edge.data[o] = 241; edge.data[o + 1] = 217; edge.data[o + 2] = 158; edge.data[o + 3] = Math.round(a * 255);
+          const lum = (0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2]) / 255;
+          dark.data[o] = lum * 26; dark.data[o + 1] = lum * 118; dark.data[o + 2] = lum * 92; dark.data[o + 3] = px[o + 3];
+        }
+        const bake = (data, sel) => {
+          const c = document.createElement('canvas'); c.width = W; c.height = H;
+          c.getContext('2d').putImageData(data, 0, 0);
+          c.toBlob((blob) => {
+            if (!blob) return;
+            const url = URL.createObjectURL(blob);
+            $$(sel).forEach((el) => {
+              el.src = url;
+              el.dataset.ready = 'true';
+            });
+          });
+        };
+        bake(edge, '.hero-portrait.bp, .lens-edge'); bake(dark, '.lens-dark');
+      } catch {
+        // Fallback gracefully on any canvas restriction
+        $$('.hero-portrait.bp, .lens-wrap').forEach((el) => el.remove());
       }
-      const edge = cx.createImageData(W, H), dark = cx.createImageData(W, H);
-      for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-        const i = y * W + x, o = i * 4;
-        const gx = blur[i + 1 - W] + 2 * blur[i + 1] + blur[i + 1 + W] - blur[i - 1 - W] - 2 * blur[i - 1] - blur[i - 1 + W];
-        const gy = blur[i + W - 1] + 2 * blur[i + W] + blur[i + W + 1] - blur[i - W - 1] - 2 * blur[i - W] - blur[i - W + 1];
-        const a = clamp((Math.hypot(gx, gy) - 0.05) * 5.5);
-        edge.data[o] = 241; edge.data[o + 1] = 217; edge.data[o + 2] = 158; edge.data[o + 3] = Math.round(a * 255);
-        const lum = (0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2]) / 255;
-        dark.data[o] = lum * 26; dark.data[o + 1] = lum * 118; dark.data[o + 2] = lum * 92; dark.data[o + 3] = px[o + 3];
-      }
-      const bake = (data, sel) => {
-        const c = document.createElement('canvas'); c.width = W; c.height = H;
-        c.getContext('2d').putImageData(data, 0, 0);
-        c.toBlob((blob) => $$(sel).forEach((el) => { el.src = URL.createObjectURL(blob); }));
-      };
-      bake(edge, '.hero-portrait.bp, .lens-edge'); bake(dark, '.lens-dark');
     };
     if (window.requestIdleCallback) requestIdleCallback(processLens, { timeout: 1200 });
     else setTimeout(processLens, 150);
+  };
+  src.onerror = () => {
+    $$('.hero-portrait.bp, .lens-wrap').forEach((el) => el.remove());
   };
   src.src = 'assets/hero-portrait.png';
 
@@ -970,7 +1024,15 @@ form.addEventListener('submit', async (event) => {
   submitBtn.classList.add('is-loading'); submitBtn.disabled = true; label.textContent = 'Sending…';
   try {
     await sendEnquiry(data);
-    $('[data-success-copy]').textContent = `Thank you, ${String(data.get('name')).split(' ')[0]} — the team will reply to ${data.get('contact')} soon.`;
+    $('[data-success-copy]').textContent = `Thank you, ${String(data.get('name')).split(' ')[0]} — the team will review your project and reply to ${data.get('contact')} shortly.`;
+    const waBtn = $('[data-success-wa]');
+    if (waBtn) {
+      waBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lastBrief)}`;
+    }
+    const mailBtn = $('[data-success-mail]');
+    if (mailBtn) {
+      mailBtn.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Project Enquiry: ${data.get('service')} — ${data.get('name')}`)}&body=${encodeURIComponent(lastBrief)}`;
+    }
     form.classList.add('is-sent'); successBox.hidden = false; successBox.focus();
     form.reset(); fields.forEach((f) => check(f, false));
   } catch {
