@@ -49,24 +49,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
 // Authentication Check
 $isAuthed = !empty($_SESSION['decorin_auth']);
 
-// Helper to load raw leads
-function loadLeads(string $file): array {
+// Helper to save leads with atomic safety and auto-backup
+function saveLeads(string $file, string $backupFile, array $data): bool {
+    if (file_exists($file)) {
+        @copy($file, $backupFile);
+    }
+    $payload = json_encode(array_values($data), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    return @file_put_contents($file, $payload, LOCK_EX) !== false;
+}
+
+// Helper to load and normalize raw leads
+function loadLeads(string $file, string $backupFile): array {
     if (!file_exists($file)) return [];
     $raw = @file_get_contents($file);
     if (!$raw) return [];
     $data = json_decode($raw, true);
-    return is_array($data) ? $data : [];
-}
+    if (!is_array($data)) return [];
 
-// Helper to save leads with atomic safety and backup
-function saveLeads(string $file, string $backupFile, array $data): bool {
-    // 1. Back up existing file
-    if (file_exists($file)) {
-        @copy($file, $backupFile);
+    $changed = false;
+    foreach ($data as $i => &$item) {
+        if (!is_array($item)) continue;
+        if (empty($item['id'])) {
+            $ts = !empty($item['timestamp']) ? strtotime((string)$item['timestamp']) : time();
+            $item['id'] = 'SSD-' . date('ymd', $ts) . '-' . strtoupper(substr(md5(($item['name'] ?? '') . $i . microtime()), 0, 4));
+            $changed = true;
+        }
+        if (!isset($item['status']) || $item['status'] === '') {
+            $item['status'] = 'NEW';
+            $changed = true;
+        }
+        if (!isset($item['notes'])) {
+            $item['notes'] = '';
+            $changed = true;
+        }
     }
-    // 2. Write new data with exclusive lock
-    $payload = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    return @file_put_contents($file, $payload, LOCK_EX) !== false;
+    unset($item);
+
+    // Persist permanently if any IDs or fields were added
+    if ($changed) {
+        saveLeads($file, $backupFile, $data);
+    }
+    return $data;
 }
 
 // Handle POST Actions for Authenticated Admin
@@ -75,7 +98,7 @@ $flashType = 'info';
 
 if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = (string)$_POST['action'];
-    $leads = loadLeads($jsonFile);
+    $leads = loadLeads($jsonFile, $backupFile);
 
     if ($action === 'add_lead') {
         $name = trim((string)($_POST['name'] ?? ''));
@@ -89,7 +112,7 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
         $notes = trim((string)($_POST['notes'] ?? ''));
 
         if ($name === '' || $contact === '') {
-            $flashMessage = 'Lead creation failed: Client Name and Contact are required.';
+            $flashMessage = 'Lead creation failed: Client name and contact details are required.';
             $flashType = 'error';
         } else {
             $leadId = 'SSD-' . date('ymd') . '-' . strtoupper(substr(md5($name . $contact . microtime()), 0, 4));
@@ -108,13 +131,12 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
                 'source' => 'Manual Entry',
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Admin Panel'
             ];
-            // Prepend new lead so it's first
             array_unshift($leads, $newLead);
             if (saveLeads($jsonFile, $backupFile, $leads)) {
-                $flashMessage = "Lead #{$leadId} added successfully!";
+                $flashMessage = "Lead #{$leadId} added successfully.";
                 $flashType = 'success';
             } else {
-                $flashMessage = 'Failed to write lead to database.';
+                $flashMessage = 'Failed to save lead to database.';
                 $flashType = 'error';
             }
         }
@@ -125,12 +147,13 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
 
         $newLeads = [];
         foreach ($leads as $idx => $lead) {
-            $id = $lead['id'] ?? '';
-            if ($targetId !== '' && $id === $targetId) {
+            $id = trim((string)($lead['id'] ?? ''));
+            // Match by ID or by Index
+            if ($targetId !== '' && strcasecmp($id, $targetId) === 0) {
                 $deleted = true;
-                continue; // drop this record
+                continue;
             }
-            if ($targetId === '' && $targetIndex === $idx) {
+            if ($targetIndex >= 0 && $targetIndex === $idx) {
                 $deleted = true;
                 continue;
             }
@@ -139,7 +162,7 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
 
         if ($deleted) {
             saveLeads($jsonFile, $backupFile, $newLeads);
-            $flashMessage = "Lead deleted successfully. (Safety backup preserved)";
+            $flashMessage = 'Lead deleted successfully.';
             $flashType = 'success';
         } else {
             $flashMessage = 'Could not find lead to delete.';
@@ -149,17 +172,13 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
         $targetId = trim((string)($_POST['lead_id'] ?? ''));
         $targetIndex = isset($_POST['lead_index']) ? (int)$_POST['lead_index'] : -1;
         $newStatus = trim((string)($_POST['new_status'] ?? ''));
-        $newNotes = isset($_POST['notes']) ? trim((string)$_POST['notes']) : null;
         $updated = false;
 
         foreach ($leads as $idx => &$lead) {
-            $id = $lead['id'] ?? '';
-            if (($targetId !== '' && $id === $targetId) || ($targetId === '' && $targetIndex === $idx)) {
+            $id = trim((string)($lead['id'] ?? ''));
+            if (($targetId !== '' && strcasecmp($id, $targetId) === 0) || ($targetIndex >= 0 && $targetIndex === $idx)) {
                 if ($newStatus !== '') {
                     $lead['status'] = $newStatus;
-                }
-                if ($newNotes !== null) {
-                    $lead['notes'] = $newNotes;
                 }
                 $lead['updated_at'] = date('c');
                 $updated = true;
@@ -170,14 +189,42 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
 
         if ($updated) {
             saveLeads($jsonFile, $backupFile, $leads);
-            $flashMessage = "Lead updated successfully.";
+            $statusLabel = ($newStatus === 'DISCUSSION') ? 'In Discussion' : ucfirst(strtolower($newStatus));
+            $flashMessage = "Lead status updated to {$statusLabel}.";
             $flashType = 'success';
+        } else {
+            $flashMessage = 'Could not find lead to update status.';
+            $flashType = 'error';
+        }
+    } elseif ($action === 'update_notes') {
+        $targetId = trim((string)($_POST['lead_id'] ?? ''));
+        $targetIndex = isset($_POST['lead_index']) ? (int)$_POST['lead_index'] : -1;
+        $newNotes = trim((string)($_POST['notes'] ?? ''));
+        $updated = false;
+
+        foreach ($leads as $idx => &$lead) {
+            $id = trim((string)($lead['id'] ?? ''));
+            if (($targetId !== '' && strcasecmp($id, $targetId) === 0) || ($targetIndex >= 0 && $targetIndex === $idx)) {
+                $lead['notes'] = $newNotes;
+                $lead['updated_at'] = date('c');
+                $updated = true;
+                break;
+            }
+        }
+        unset($lead);
+
+        if ($updated) {
+            saveLeads($jsonFile, $backupFile, $leads);
+            $flashMessage = 'Notes saved successfully.';
+            $flashType = 'success';
+        } else {
+            $flashMessage = 'Could not find lead to update notes.';
+            $flashType = 'error';
         }
     }
 
-    // Redirect to self to prevent form re-submission on refresh
     if (!isset($_GET['ajax'])) {
-        header("Location: leads.php?msg=" . urlencode($flashMessage) . "&type=" . urlencode($flashType));
+        header('Location: leads.php?msg=' . urlencode($flashMessage) . '&type=' . urlencode($flashType));
         exit;
     } else {
         header('Content-Type: application/json');
@@ -186,22 +233,16 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
     }
 }
 
-// Get flash messages from GET redirect
+// Flash messages from redirect
 if (isset($_GET['msg'])) {
     $flashMessage = (string)$_GET['msg'];
     $flashType = (string)($_GET['type'] ?? 'info');
 }
 
-// Load Enquiries for Display
-$rawLeads = loadLeads($jsonFile);
-
-// Ensure every lead has an ID and index reference
+// Load leads for display
+$rawLeads = loadLeads($jsonFile, $backupFile);
 $enquiries = [];
 foreach ($rawLeads as $i => $item) {
-    if (empty($item['id'])) {
-        $ts = !empty($item['timestamp']) ? strtotime((string)$item['timestamp']) : time();
-        $item['id'] = 'SSD-' . date('ymd', $ts) . '-' . substr(md5(($item['name'] ?? '') . $i), 0, 4);
-    }
     $item['_index'] = $i;
     $enquiries[] = $item;
 }
@@ -211,7 +252,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="ssdecorin_leads_' . date('Y-m-d_His') . '.csv"');
     $out = fopen('php://output', 'w');
-    fputs($out, "\xEF\xBB\xBF"); // UTF-8 BOM
+    fputs($out, "\xEF\xBB\xBF");
     fputcsv($out, ['Lead ID', 'Date & Time (IST)', 'Client Name', 'Contact', 'City', 'Service Needed', 'Project Stage', 'Timeline', 'Scope Details', 'Status', 'Admin Notes', 'Source', 'IP Address']);
     foreach ($enquiries as $row) {
         $ts = !empty($row['timestamp']) ? strtotime((string)$row['timestamp']) : time();
@@ -233,6 +274,14 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
         ]);
     }
     fclose($out);
+    exit;
+}
+
+// Handle JSON Database Backup Download
+if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
+    header('Content-Type: application/json; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="ssdecorin_leads_backup_' . date('Y-m-d_His') . '.json"');
+    echo json_encode($enquiries, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 ?>
@@ -349,84 +398,87 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 20px;
-      margin-bottom: 1.4rem;
       backdrop-filter: blur(16px);
-      box-shadow: 0 12px 36px rgba(0,0,0,0.3);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      margin-bottom: 1.5rem;
     }
     .dash-brand { display: flex; align-items: center; gap: 1rem; }
-    .dash-brand img { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--brass); object-fit: cover; }
-    .dash-brand h1 { font-weight: 800; font-size: 1.35rem; color: var(--brass-2); letter-spacing: -0.01em; }
+    .dash-brand img { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--brass); }
+    .dash-brand h1 { font-size: 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.6rem; }
     .dash-brand p { font-size: 0.82rem; color: var(--mute); margin-top: 2px; }
-    .dash-brand .admin-badge {
+    .admin-badge {
       display: inline-block;
-      font-size: 0.72rem;
-      padding: 2px 8px;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      color: #86efac;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.55rem;
+      background: rgba(22, 104, 79, 0.4);
+      border: 1px solid rgba(22, 104, 79, 0.8);
       border-radius: 999px;
-      margin-left: 6px;
-      font-weight: 600;
+      color: #a7f3d0;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
-    .dash-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .dash-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
     .btn-action {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1rem;
+      gap: 0.45rem;
+      padding: 0.55rem 1rem;
       border-radius: 10px;
-      font-size: 0.86rem;
+      font-size: 0.85rem;
       font-weight: 700;
       text-decoration: none;
       cursor: pointer;
+      transition: all 0.2s ease;
       border: none;
-      transition: all 0.2s;
-      white-space: nowrap;
+      font-family: inherit;
     }
-    .btn-primary { background: linear-gradient(135deg, var(--brass-2), var(--brass)); color: #120e06; box-shadow: 0 4px 14px rgba(212, 176, 106, 0.25); }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(212, 176, 106, 0.4); }
-    .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border-subtle); }
-    .btn-ghost:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brass-2), var(--brass));
+      color: #120e06;
+      box-shadow: 0 4px 14px rgba(212, 176, 106, 0.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(212, 176, 106, 0.5); }
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { background: rgba(212, 176, 106, 0.15); border-color: var(--brass); color: #fff; }
 
-    /* Stats Overview */
-    .stats-row {
+    /* Metric Cards */
+    .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 1rem;
-      margin-bottom: 1.4rem;
+      margin-bottom: 1.5rem;
     }
-    .stat-card {
+    .metric-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 1.1rem 1.3rem;
       backdrop-filter: blur(12px);
-      transition: transform 0.2s, border-color 0.2s;
     }
-    .stat-card:hover { border-color: var(--brass); transform: translateY(-2px); }
-    .stat-card small { display: block; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--brass); margin-bottom: 0.35rem; font-weight: 700; }
-    .stat-card strong { font-size: 1.7rem; color: #fff; font-weight: 900; }
-    .stat-card em { font-size: 0.78rem; font-style: normal; color: var(--mute); display: block; margin-top: 4px; }
+    .metric-card small { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); font-weight: 700; margin-bottom: 0.3rem; }
+    .metric-card strong { display: block; font-size: 1.8rem; font-weight: 800; color: var(--brass-2); line-height: 1.1; }
+    .metric-card em { display: block; font-style: normal; font-size: 0.78rem; color: var(--mute); margin-top: 0.35rem; }
 
-    /* Controls Bar & Filters */
+    /* Search & Filter Bar */
     .controls-wrap {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 1rem 1.2rem;
-      margin-bottom: 1.4rem;
+      margin-bottom: 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 0.9rem;
-      backdrop-filter: blur(12px);
+      gap: 0.85rem;
+      backdrop-filter: blur(14px);
     }
-    .search-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-    }
+    .search-row { display: flex; flex-wrap: wrap; gap: 0.8rem; }
     .search-box {
-      flex: 1 1 260px;
+      flex: 1;
+      min-width: 220px;
       padding: 0.75rem 1.1rem;
       background: rgba(4, 8, 16, 0.6);
       border: 1px solid var(--card-border);
@@ -515,16 +567,36 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       margin-bottom: 0.45rem;
     }
     .lead-details { font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; white-space: pre-wrap; max-width: 360px; word-break: break-word; }
+    
+    /* Notes Styling */
     .lead-notes {
       margin-top: 0.5rem;
-      padding: 0.45rem 0.65rem;
-      background: rgba(0,0,0,0.3);
+      padding: 0.5rem 0.75rem;
+      background: rgba(0, 0, 0, 0.35);
       border-left: 2px solid var(--brass);
-      border-radius: 4px;
-      font-size: 0.8rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
       color: #e2e8f0;
-      font-style: italic;
+      line-height: 1.45;
     }
+    .lead-notes strong { color: var(--brass-2); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem; }
+    .btn-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(212, 176, 106, 0.12);
+      border: 1px solid rgba(212, 176, 106, 0.35);
+      color: var(--brass-2);
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 0.35rem;
+      transition: all 0.2s;
+    }
+    .btn-note:hover { background: rgba(212, 176, 106, 0.25); color: #fff; border-color: var(--brass); }
+
     .lead-contact { font-family: monospace; font-size: 0.9rem; color: #f1e0b8; margin-bottom: 0.5rem; }
     
     /* Contact Action Buttons */
@@ -549,15 +621,17 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
     
     /* Status Badges & Selector */
     .status-select {
-      background: rgba(4, 8, 16, 0.7);
+      background: rgba(4, 8, 16, 0.85);
       border: 1px solid var(--card-border);
       border-radius: 8px;
       color: #fff;
-      padding: 0.35rem 0.6rem;
-      font-size: 0.76rem;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
+      transition: border-color 0.2s;
     }
+    .status-select:focus { outline: none; border-color: var(--brass); }
     .badge-status {
       display: inline-block;
       font-size: 0.72rem;
@@ -577,9 +651,9 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       background: rgba(239, 68, 68, 0.12);
       border: 1px solid rgba(239, 68, 68, 0.3);
       color: #fca5a5;
-      padding: 0.35rem 0.65rem;
-      border-radius: 6px;
-      font-size: 0.74rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
@@ -588,7 +662,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
 
     .date-col { font-size: 0.8rem; color: var(--mute); white-space: nowrap; line-height: 1.4; }
 
-    /* Mobile Cards View (Hidden on desktop, shown on mobile <= 820px) */
+    /* Mobile Cards View (<= 820px) */
     .mobile-cards-wrap { display: none; }
     
     @media (max-width: 820px) {
@@ -630,7 +704,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       }
       .m-actions-grid .c-btn {
         justify-content: center;
-        min-height: 44px; /* Proper mobile touch target */
+        min-height: 44px;
         font-size: 0.88rem;
       }
       .m-actions-grid .c-wa { grid-column: span 2; }
@@ -643,8 +717,8 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
         padding-top: 0.75rem;
         border-top: 1px solid var(--border-subtle);
       }
-      .m-card-footer .status-select { flex: 1; min-height: 40px; }
-      .m-card-footer .btn-delete { min-height: 40px; padding: 0 1rem; }
+      .m-card-footer .status-select { flex: 1; min-height: 42px; }
+      .m-card-footer .btn-delete { min-height: 42px; padding: 0 1rem; }
     }
 
     /* Modal Styling */
@@ -652,7 +726,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(4, 7, 14, 0.82);
+      background: rgba(4, 7, 14, 0.85);
       backdrop-filter: blur(12px);
       z-index: 1000;
       place-items: center;
@@ -667,8 +741,9 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       padding: clamp(1.4rem, 3.5vw, 2.2rem);
       width: 100%;
       max-width: 560px;
-      box-shadow: 0 24px 70px rgba(0,0,0,0.8);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.85);
       position: relative;
+      animation: fadeIn 0.25s ease;
     }
     .modal-head {
       display: flex;
@@ -678,12 +753,12 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       padding-bottom: 0.8rem;
       border-bottom: 1px solid var(--border-subtle);
     }
-    .modal-head h2 { font-size: 1.35rem; color: var(--brass-2); font-weight: 800; }
+    .modal-head h2 { font-size: 1.3rem; color: var(--brass-2); font-weight: 800; }
     .modal-close {
       background: none;
       border: none;
       color: var(--mute);
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       cursor: pointer;
       line-height: 1;
     }
@@ -693,14 +768,14 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
     .form-control {
       width: 100%;
       padding: 0.75rem 0.95rem;
-      background: rgba(4, 8, 16, 0.7);
+      background: rgba(4, 8, 16, 0.75);
       border: 1px solid rgba(212, 176, 106, 0.3);
       border-radius: 10px;
       color: #fff;
       font-size: 0.92rem;
       font-family: inherit;
     }
-    .form-control:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 10px rgba(212, 176, 106, 0.3); }
+    .form-control:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 10px rgba(212, 176, 106, 0.35); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
     @media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
     .btn-submit {
@@ -763,8 +838,12 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           + Add Lead
         </button>
-        <a class="btn-action btn-ghost" href="?export=csv">
+        <a class="btn-action btn-ghost" href="?export=backup" title="Download complete database JSON backup">
           <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Download Backup (JSON)
+        </a>
+        <a class="btn-action btn-ghost" href="?export=csv" title="Export leads as spreadsheet CSV">
+          <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
           Export CSV
         </a>
         <a class="btn-action btn-ghost" href="leads.php">Refresh</a>
@@ -777,17 +856,23 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       $todayCount = 0;
       $todayDate = date('Y-m-d');
       $newCount = 0;
-      $convertedCount = 0;
       $contactedCount = 0;
+      $discussionCount = 0;
+      $convertedCount = 0;
+      $closedCount = 0;
 
       foreach ($enquiries as $e) {
         $st = strtoupper((string)($e['status'] ?? 'NEW'));
-        if ($st === 'NEW' || $st === 'PENDING' || $st === 'RECORDED' || $st === 'SENT') {
+        if (in_array($st, ['NEW', 'PENDING', 'RECORDED', 'SENT'])) {
           $newCount++;
         } elseif ($st === 'CONTACTED') {
           $contactedCount++;
+        } elseif ($st === 'DISCUSSION' || $st === 'IN DISCUSSION' || $st === 'IN_DISCUSSION') {
+          $discussionCount++;
         } elseif ($st === 'CONVERTED') {
           $convertedCount++;
+        } elseif ($st === 'CLOSED') {
+          $closedCount++;
         }
 
         if (!empty($e['timestamp']) && strpos((string)$e['timestamp'], $todayDate) === 0) {
@@ -798,38 +883,34 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       $conversionRate = $totalLeads > 0 ? round(($convertedCount / $totalLeads) * 100) : 0;
     ?>
 
-    <div class="stats-row">
-      <div class="stat-card">
-        <small>Total Enquiries</small>
+    <!-- Metrics Overview -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <small>Total Leads</small>
         <strong><?= $totalLeads ?></strong>
-        <em>All-time records</em>
+        <em>All active records</em>
       </div>
-      <div class="stat-card">
-        <small>New / Action Needed</small>
-        <strong style="color: #93c5fd;"><?= $newCount ?></strong>
-        <em>Awaiting response</em>
+      <div class="metric-card">
+        <small>New Enquiries</small>
+        <strong><?= $newCount ?></strong>
+        <em>Awaiting first response</em>
       </div>
-      <div class="stat-card">
-        <small>Received Today</small>
-        <strong style="color: #fde047;"><?= $todayCount ?></strong>
-        <em><?= date('d M Y') ?></em>
+      <div class="metric-card">
+        <small>In Discussion</small>
+        <strong><?= $discussionCount ?></strong>
+        <em>Quotes &amp; site audits ongoing</em>
       </div>
-      <div class="stat-card">
-        <small>Converted</small>
-        <strong style="color: #86efac;"><?= $convertedCount ?> <span style="font-size:0.95rem;font-weight:600;color:var(--mute)">(<?= $conversionRate ?>%)</span></strong>
-        <em>Successful clients</em>
-      </div>
-      <div class="stat-card">
-        <small>Storage Vault</small>
-        <strong style="color: #86efac; font-size:1.2rem;">Live Backed Up</strong>
-        <em>Latest: <?= $latestTime ?></em>
+      <div class="metric-card">
+        <small>Conversion Rate</small>
+        <strong><?= $conversionRate ?>%</strong>
+        <em><?= $convertedCount ?> converted of <?= $totalLeads ?></em>
       </div>
     </div>
 
     <!-- Search & Filter Controls -->
     <div class="controls-wrap">
       <div class="search-row">
-        <input class="search-box" id="searchBox" type="text" placeholder="Search by name, phone, city, keyword, notes..." />
+        <input class="search-box" id="searchBox" type="text" placeholder="Search by name, phone, city, notes, service, scope..." />
         <select class="select-svc" id="serviceFilter">
           <option value="">All Services</option>
           <option value="Site Measurement">Site Measurement</option>
@@ -838,7 +919,6 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
           <option value="Interior Training">Interior Training</option>
           <option value="Vendor Directory">Vendor Directory</option>
           <option value="Home Owner Consultant">Home Owner Consultant</option>
-          <option value="Homeowner Consultant">Homeowner Consultant (Legacy)</option>
           <option value="General Enquiry">General Enquiry</option>
         </select>
       </div>
@@ -847,8 +927,9 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
         <button class="chip is-active" type="button" data-status-filter="">All (<?= $totalLeads ?>)</button>
         <button class="chip" type="button" data-status-filter="NEW">New (<?= $newCount ?>)</button>
         <button class="chip" type="button" data-status-filter="CONTACTED">Contacted (<?= $contactedCount ?>)</button>
+        <button class="chip" type="button" data-status-filter="DISCUSSION">In Discussion (<?= $discussionCount ?>)</button>
         <button class="chip" type="button" data-status-filter="CONVERTED">Converted (<?= $convertedCount ?>)</button>
-        <button class="chip" type="button" data-status-filter="CLOSED">Closed</button>
+        <button class="chip" type="button" data-status-filter="CLOSED">Closed (<?= $closedCount ?>)</button>
       </div>
     </div>
 
@@ -858,8 +939,8 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
         <thead>
           <tr>
             <th>Date &amp; ID</th>
-            <th>Client Info</th>
-            <th>Service &amp; Project Scope</th>
+            <th>Client</th>
+            <th>Service &amp; Scope</th>
             <th>Stage &amp; Timeline</th>
             <th>Status &amp; Notes</th>
             <th style="text-align: right;">Actions</th>
@@ -889,8 +970,10 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                 $rawStatus = strtoupper((string)($row['status'] ?? 'NEW'));
                 if (in_array($rawStatus, ['PENDING', 'SENT', 'RECORDED', 'NEW'])) {
                   $displayStatus = 'NEW';
-                } elseif (in_array($rawStatus, ['CONTACTED', 'DISCUSSION', 'CONVERTED', 'CLOSED'])) {
+                } elseif (in_array($rawStatus, ['CONTACTED', 'CONVERTED', 'CLOSED'])) {
                   $displayStatus = $rawStatus;
+                } elseif (in_array($rawStatus, ['DISCUSSION', 'IN DISCUSSION', 'IN_DISCUSSION'])) {
+                  $displayStatus = 'DISCUSSION';
                 } else {
                   $displayStatus = 'NEW';
                 }
@@ -899,7 +982,6 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                 $dateFormatted = date('d M Y', $ts);
                 $timeFormatted = date('h:i A', $ts) . ' IST';
 
-                // Phone clean for WA / Tel
                 $cleanDigits = preg_replace('/[^0-9]/', '', $contact);
                 if (strlen($cleanDigits) === 10) {
                   $waNum = '91' . $cleanDigits;
@@ -921,15 +1003,15 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                   <div class="lead-contact"><?= $contact ?></div>
                   <div class="contact-btns">
                     <?php if ($cleanDigits && strlen($cleanDigits) >= 10): ?>
-                      <a class="c-btn c-wa" href="https://wa.me/<?= $waNum ?>?text=<?= $waText ?>" target="_blank" rel="noopener noreferrer">
+                      <a class="c-btn c-wa" href="https://wa.me/<?= $waNum ?>?text=<?= $waText ?>" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
                         <span>WhatsApp</span>
                       </a>
-                      <a class="c-btn c-tel" href="tel:+<?= $waNum ?>">
+                      <a class="c-btn c-tel" href="tel:+<?= $waNum ?>" title="Call client">
                         <span>Call</span>
                       </a>
                     <?php endif; ?>
                     <?php if ($isEmail): ?>
-                      <a class="c-btn c-mail" href="mailto:<?= $contact ?>">
+                      <a class="c-btn c-mail" href="mailto:<?= $contact ?>" title="Send email">
                         <span>Email</span>
                       </a>
                     <?php endif; ?>
@@ -941,7 +1023,17 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                     <div class="lead-details"><?= $details ?></div>
                   <?php endif; ?>
                   <?php if ($notes): ?>
-                    <div class="lead-notes"><strong>Note:</strong> <?= $notes ?></div>
+                    <div class="lead-notes">
+                      <strong>Admin Note</strong>
+                      <span><?= $notes ?></span>
+                      <div>
+                        <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', <?= htmlspecialchars(json_encode($notes), ENT_QUOTES) ?>)">Edit Note</button>
+                      </div>
+                    </div>
+                  <?php else: ?>
+                    <div>
+                      <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', '')">+ Add Note</button>
+                    </div>
                   <?php endif; ?>
                 </td>
                 <td>
@@ -963,7 +1055,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                   </form>
                 </td>
                 <td style="text-align: right;">
-                  <form method="POST" onsubmit="return confirm('Are you sure you want to delete lead #<?= $id ?> (<?= $name ?>)? A safety backup will be created.');">
+                  <form method="POST" onsubmit="return confirm('Are you sure you want to delete the lead for <?= addslashes($name) ?>?');">
                     <input type="hidden" name="action" value="delete_lead" />
                     <input type="hidden" name="lead_id" value="<?= $id ?>" />
                     <input type="hidden" name="lead_index" value="<?= $idx ?>" />
@@ -977,11 +1069,11 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       </table>
     </div>
 
-    <!-- Mobile Feed (Cards) -->
+    <!-- Mobile Cards View (<= 820px) -->
     <div class="mobile-cards-wrap" id="mobileCards">
       <?php if (empty($enquiries)): ?>
-        <div class="m-lead-card" style="text-align:center; color:var(--mute); padding: 2.5rem 1rem;">
-          No enquiries recorded yet. Use "+ Add Lead" above to record client leads manually.
+        <div style="text-align: center; padding: 3rem 1rem; color: var(--mute); background: var(--card-bg); border-radius: 16px;">
+          No enquiries recorded yet.
         </div>
       <?php else: ?>
         <?php foreach ($enquiries as $row): ?>
@@ -1000,8 +1092,10 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
             $rawStatus = strtoupper((string)($row['status'] ?? 'NEW'));
             if (in_array($rawStatus, ['PENDING', 'SENT', 'RECORDED', 'NEW'])) {
               $displayStatus = 'NEW';
-            } elseif (in_array($rawStatus, ['CONTACTED', 'DISCUSSION', 'CONVERTED', 'CLOSED'])) {
+            } elseif (in_array($rawStatus, ['CONTACTED', 'CONVERTED', 'CLOSED'])) {
               $displayStatus = $rawStatus;
+            } elseif (in_array($rawStatus, ['DISCUSSION', 'IN DISCUSSION', 'IN_DISCUSSION'])) {
+              $displayStatus = 'DISCUSSION';
             } else {
               $displayStatus = 'NEW';
             }
@@ -1025,7 +1119,9 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                 <div class="lead-name"><?= $name ?></div>
                 <div class="lead-city">&#x1F4CD; <?= $city ?></div>
               </div>
-              <span class="badge-status st-<?= $displayStatus ?>"><?= $displayStatus ?></span>
+              <span class="badge-status st-<?= $displayStatus ?>">
+                <?= $displayStatus === 'DISCUSSION' ? 'IN DISCUSSION' : $displayStatus ?>
+              </span>
             </div>
 
             <div class="m-card-meta">
@@ -1041,7 +1137,17 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
             <?php endif; ?>
 
             <?php if ($notes): ?>
-              <div class="lead-notes" style="margin-bottom:0.75rem"><strong>Note:</strong> <?= $notes ?></div>
+              <div class="lead-notes" style="margin-bottom:0.75rem">
+                <strong>Admin Note</strong>
+                <span><?= $notes ?></span>
+                <div>
+                  <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', <?= htmlspecialchars(json_encode($notes), ENT_QUOTES) ?>)">Edit Note</button>
+                </div>
+              </div>
+            <?php else: ?>
+              <div style="margin-bottom:0.75rem">
+                <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', '')">+ Add Note</button>
+              </div>
             <?php endif; ?>
 
             <div style="font-size:0.76rem; color:var(--mute); margin-bottom: 0.6rem;">Received: <?= $dateFormatted ?></div>
@@ -1068,14 +1174,14 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
                 <input type="hidden" name="lead_id" value="<?= $id ?>" />
                 <input type="hidden" name="lead_index" value="<?= $idx ?>" />
                 <select class="status-select st-<?= $displayStatus ?>" name="new_status" onchange="this.form.submit()" style="width:100%;">
-                  <option value="NEW" <?= $displayStatus === 'NEW' ? 'selected' : '' ?>>Status: New</option>
-                  <option value="CONTACTED" <?= $displayStatus === 'CONTACTED' ? 'selected' : '' ?>>Status: Contacted</option>
-                  <option value="DISCUSSION" <?= $displayStatus === 'DISCUSSION' ? 'selected' : '' ?>>Status: Discussion</option>
-                  <option value="CONVERTED" <?= $displayStatus === 'CONVERTED' ? 'selected' : '' ?>>Status: Converted</option>
-                  <option value="CLOSED" <?= $displayStatus === 'CLOSED' ? 'selected' : '' ?>>Status: Closed</option>
+                  <option value="NEW" <?= $displayStatus === 'NEW' ? 'selected' : '' ?>>New</option>
+                  <option value="CONTACTED" <?= $displayStatus === 'CONTACTED' ? 'selected' : '' ?>>Contacted</option>
+                  <option value="DISCUSSION" <?= $displayStatus === 'DISCUSSION' ? 'selected' : '' ?>>In Discussion</option>
+                  <option value="CONVERTED" <?= $displayStatus === 'CONVERTED' ? 'selected' : '' ?>>Converted</option>
+                  <option value="CLOSED" <?= $displayStatus === 'CLOSED' ? 'selected' : '' ?>>Closed</option>
                 </select>
               </form>
-              <form method="POST" onsubmit="return confirm('Delete lead #<?= $id ?>?');">
+              <form method="POST" onsubmit="return confirm('Are you sure you want to delete the lead for <?= addslashes($name) ?>?');">
                 <input type="hidden" name="action" value="delete_lead" />
                 <input type="hidden" name="lead_id" value="<?= $id ?>" />
                 <input type="hidden" name="lead_index" value="<?= $idx ?>" />
@@ -1089,11 +1195,34 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
 
   </div>
 
-  <!-- Add Lead Modal -->
-  <div class="modal-backdrop" id="addLeadModal" onclick="if(event.target===this) closeAddModal()">
+  <!-- Note Editor Modal -->
+  <div class="modal-backdrop" id="noteModal">
     <div class="modal-card">
       <div class="modal-head">
-        <h2>+ Add New Lead</h2>
+        <h2 id="noteModalTitle">Admin Note</h2>
+        <button class="modal-close" type="button" onclick="closeNoteModal()">&times;</button>
+      </div>
+      <form method="POST">
+        <input type="hidden" name="action" value="update_notes" />
+        <input type="hidden" name="lead_id" id="noteModalLeadId" value="" />
+        <input type="hidden" name="lead_index" id="noteModalLeadIndex" value="" />
+        <div class="form-group">
+          <label>Internal Summary &amp; Meeting Notes</label>
+          <textarea class="form-control" name="notes" id="noteModalText" rows="4" placeholder="Enter private notes (e.g., site visit scheduled for Sunday, estimate shared with client, waiting for BOQ)..."></textarea>
+        </div>
+        <div style="display:flex; gap:0.8rem;">
+          <button class="btn-submit" type="submit" style="flex:2;">Save Note</button>
+          <button class="btn-submit" type="button" onclick="closeNoteModal()" style="flex:1; background:rgba(255,255,255,0.08); color:#fff;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Lead Modal -->
+  <div class="modal-backdrop" id="addLeadModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>+ Add Lead Manually</h2>
         <button class="modal-close" type="button" onclick="closeAddModal()">&times;</button>
       </div>
       <form method="POST">
@@ -1101,20 +1230,20 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
         <div class="form-row">
           <div class="form-group">
             <label>Client Name *</label>
-            <input class="form-control" type="text" name="name" required placeholder="e.g. Ramesh Varma" />
+            <input class="form-control" type="text" name="name" placeholder="e.g. Rahul Sharma" required />
           </div>
           <div class="form-group">
-            <label>Contact (Phone / Email) *</label>
-            <input class="form-control" type="text" name="contact" required placeholder="e.g. 9876543210 or email" />
+            <label>Project City *</label>
+            <input class="form-control" type="text" name="city" placeholder="e.g. Hyderabad" required />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>City</label>
-            <input class="form-control" type="text" name="city" placeholder="e.g. Hyderabad / Bengaluru" />
+            <label>Contact (Phone / Email) *</label>
+            <input class="form-control" type="text" name="contact" placeholder="e.g. 9876543210 or email" required />
           </div>
           <div class="form-group">
-            <label>Service</label>
+            <label>Service Required</label>
             <select class="form-control" name="service">
               <option value="Site Measurement">Site Measurement</option>
               <option value="Interio Check">Interio Check</option>
@@ -1122,7 +1251,6 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
               <option value="Interior Training">Interior Training</option>
               <option value="Vendor Directory">Vendor Directory</option>
               <option value="Home Owner Consultant">Home Owner Consultant</option>
-          <option value="Homeowner Consultant">Homeowner Consultant (Legacy)</option>
               <option value="General Enquiry">General Enquiry</option>
             </select>
           </div>
@@ -1130,27 +1258,26 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
         <div class="form-row">
           <div class="form-group">
             <label>Project Stage</label>
-            <select class="form-control" name="stage">
-              <option value="Planning / Pre-construction">Planning / Pre-construction</option>
-              <option value="Handover / Bare Shell">Handover / Bare Shell</option>
-              <option value="Woodwork Underway">Woodwork Underway</option>
-              <option value="Final Finishing & Snagging">Final Finishing &amp; Snagging</option>
-              <option value="Renovation">Renovation</option>
-            </select>
+            <input class="form-control" type="text" name="stage" placeholder="e.g. Design / Execution" />
           </div>
           <div class="form-group">
-            <label>Initial Status</label>
-            <select class="form-control" name="status">
-              <option value="NEW">New</option>
-              <option value="CONTACTED">Contacted</option>
-              <option value="DISCUSSION">In Discussion</option>
-              <option value="CONVERTED">Converted</option>
-            </select>
+            <label>Timeline</label>
+            <input class="form-control" type="text" name="timeline" placeholder="e.g. Within 2 weeks" />
           </div>
         </div>
         <div class="form-group">
+          <label>Initial Status</label>
+          <select class="form-control" name="status">
+            <option value="NEW">New</option>
+            <option value="CONTACTED">Contacted</option>
+            <option value="DISCUSSION">In Discussion</option>
+            <option value="CONVERTED">Converted</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Scope / Project Details</label>
-          <textarea class="form-control" name="details" rows="2" placeholder="e.g. 3BHK 1600 sq.ft at Kondapur, needs quote audit..."></textarea>
+          <textarea class="form-control" name="details" rows="2" placeholder="e.g. 3BHK flat 1600 sq.ft at Kondapur, needs quote audit..."></textarea>
         </div>
         <div class="form-group">
           <label>Internal Admin Notes</label>
@@ -1162,15 +1289,32 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
   </div>
 
   <script>
-    // Modal Helpers
+    // Add Lead Modal Helpers
     function openAddModal() {
       document.getElementById('addLeadModal').classList.add('is-open');
     }
     function closeAddModal() {
       document.getElementById('addLeadModal').classList.remove('is-open');
     }
+
+    // Note Modal Helpers
+    function openNoteModal(leadId, leadIndex, clientName, existingNote) {
+      document.getElementById('noteModalLeadId').value = leadId;
+      document.getElementById('noteModalLeadIndex').value = leadIndex;
+      document.getElementById('noteModalTitle').textContent = 'Admin Note — ' + clientName;
+      document.getElementById('noteModalText').value = existingNote || '';
+      document.getElementById('noteModal').classList.add('is-open');
+      document.getElementById('noteModalText').focus();
+    }
+    function closeNoteModal() {
+      document.getElementById('noteModal').classList.remove('is-open');
+    }
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAddModal();
+      if (e.key === 'Escape') {
+        closeAddModal();
+        closeNoteModal();
+      }
     });
 
     // Real-Time Filter & Search Logic
@@ -1191,7 +1335,17 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
 
         const matchesQuery = !q || text.includes(q);
         const matchesService = !s || rowSvc.includes(s);
-        const matchesStatus = !activeStatus || rowStatus === activeStatus;
+        
+        let matchesStatus = true;
+        if (activeStatus) {
+          if (activeStatus === 'NEW') {
+            matchesStatus = ['NEW', 'PENDING', 'RECORDED', 'SENT'].includes(rowStatus);
+          } else if (activeStatus === 'DISCUSSION') {
+            matchesStatus = ['DISCUSSION', 'IN DISCUSSION', 'IN_DISCUSSION'].includes(rowStatus);
+          } else {
+            matchesStatus = (rowStatus === activeStatus);
+          }
+        }
 
         r.style.display = (matchesQuery && matchesService && matchesStatus) ? '' : 'none';
       });

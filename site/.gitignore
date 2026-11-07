@@ -10,3 +10,4 @@ Thumbs.db
 # Build and deployment artifacts
 milesweb-deploy.zip
 *.log
+logs/
