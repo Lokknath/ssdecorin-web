@@ -387,8 +387,12 @@ html:not(.js) .preloader { display: none; }
 @keyframes portraitPulse { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; } }
 
 .hero-portrait { display: block; width: 100%; height: auto; }
-.hero-portrait.photo { filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5)); }
-.lens-ring { position: absolute; left: var(--pl-x); top: var(--pl-y); width: calc(var(--pl-r) * 1.62); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 1.5px solid var(--brass-2); box-shadow: 0 0 22px rgba(241, 224, 184, 0.45), inset 0 0 22px rgba(241, 224, 184, 0.2); pointer-events: none; opacity: 0; transition: opacity 0.3s, width 0.5s var(--ease); }
+.hero-portrait.photo { filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5)); position: relative; z-index: 1; }
+.hero-portrait.bp { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; z-index: 2; opacity: 0; }
+.lens-wrap { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; -webkit-mask-image: radial-gradient(circle var(--pl-r) at var(--pl-x) var(--pl-y), #000 60%, transparent 95%); mask-image: radial-gradient(circle var(--pl-r) at var(--pl-x) var(--pl-y), #000 60%, transparent 95%); transition: opacity 0.25s var(--ease); }
+.lens-wrap img { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; }
+.portrait-btn.is-lens .lens-wrap { opacity: 1; }
+.lens-ring { position: absolute; z-index: 5; left: var(--pl-x); top: var(--pl-y); width: calc(var(--pl-r) * 1.62); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 1.5px solid var(--brass-2); box-shadow: 0 0 22px rgba(241, 224, 184, 0.45), inset 0 0 22px rgba(241, 224, 184, 0.2); pointer-events: none; opacity: 0; transition: opacity 0.3s, width 0.5s var(--ease); }
 .lens-ring::before, .lens-ring::after { content: ""; position: absolute; background: var(--brass-2); opacity: 0.85; }
 .lens-ring::before { left: 50%; top: -9px; width: 1.5px; height: 18px; translate: -50% 0; }
 .lens-ring::after { top: 50%; left: -9px; height: 1.5px; width: 18px; translate: 0 -50%; }
@@ -443,8 +447,15 @@ html:not(.js) .preloader { display: none; }
 .is-loaded .pendant { animation: lampOn 2.4s linear 2.3s backwards, glowPulse 8s ease-in-out 4.7s infinite; }
 @keyframes lampOn { 0% { opacity: 0; } 8% { opacity: 0.55; } 13% { opacity: 0.05; } 24% { opacity: 0.8; } 30% { opacity: 0.15; } 46% { opacity: 1; } 100% { opacity: 1; } }
 .is-loaded .hero-portrait.photo { animation: photoIn 1.45s var(--ease-io) 1.35s backwards; }
+.is-loaded .hero-portrait.bp { animation: bpIn 2.8s var(--ease-io) 0.75s both; }
 .is-loaded .scan { animation: scanX 1.45s var(--ease-io) 0.75s both; }
-@keyframes photoIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes photoIn { from { -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); } to { -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } }
+@keyframes bpIn { 
+  0% { opacity: 0.95; -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); } 
+  45% { opacity: 0.95; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+  70% { opacity: 0.95; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+  100% { opacity: 0; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+}
 @keyframes scanX { 0% { opacity: 1; transform: translateX(-100%); } 92% { opacity: 1; } 100% { opacity: 0; transform: translateX(0); } }
 .is-loaded .orb { animation: orbOut 1.4s var(--ease) calc(2.6s + var(--i) * 0.12s) backwards; }
 .is-loaded .stage-name { animation: riseIn 0.9s var(--ease) 2.5s backwards; }
