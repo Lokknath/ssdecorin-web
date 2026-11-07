@@ -615,96 +615,30 @@ document.addEventListener('click', (e) => {
   }
 });
 
-/* ---- Hero portrait: gold "inspection lens" follows the pointer ---- */
+/* ---- Hero portrait: gold CAD inspection loupe follows the pointer ---- */
 (function portraitLens() {
   const btn = $('.portrait-btn'), hit = $('.portrait-hit');
   if (!btn || !hit) return;
-  /* Bake the blueprint (edge lines) and x-ray (dark emerald) versions of the portrait asynchronously */
-  const src = new Image();
-  src.onload = () => {
-    const processLens = () => {
-      try {
-        const W = 560, H = Math.round((W * src.naturalHeight) / src.naturalWidth);
-        const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-        const cx = cv.getContext('2d', { willReadFrequently: true });
-        cx.drawImage(src, 0, 0, W, H);
-        const px = cx.getImageData(0, 0, W, H).data;
-        const g = new Float32Array(W * H);
-        for (let i = 0; i < W * H; i++) g[i] = ((0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) * px[i * 4 + 3]) / 65025;
-        const blur = new Float32Array(W * H);
-        for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-          const i = y * W + x;
-          blur[i] = (g[i] * 4 + g[i - 1] * 2 + g[i + 1] * 2 + g[i - W] * 2 + g[i + W] * 2 + g[i - W - 1] + g[i - W + 1] + g[i + W - 1] + g[i + W + 1]) / 16;
-        }
-        const edge = cx.createImageData(W, H), dark = cx.createImageData(W, H);
-        for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
-          const i = y * W + x, o = i * 4;
-          const gx = blur[i + 1 - W] + 2 * blur[i + 1] + blur[i + 1 + W] - blur[i - 1 - W] - 2 * blur[i - 1] - blur[i - 1 + W];
-          const gy = blur[i + W - 1] + 2 * blur[i + W] + blur[i + W + 1] - blur[i - W - 1] - 2 * blur[i - W] - blur[i - W + 1];
-          const a = clamp((Math.hypot(gx, gy) - 0.05) * 5.5);
-          edge.data[o] = 241; edge.data[o + 1] = 217; edge.data[o + 2] = 158; edge.data[o + 3] = Math.round(a * 255);
-          const lum = (0.299 * px[o] + 0.587 * px[o + 1] + 0.114 * px[o + 2]) / 255;
-          dark.data[o] = lum * 26; dark.data[o + 1] = lum * 118; dark.data[o + 2] = lum * 92; dark.data[o + 3] = px[o + 3];
-        }
-        const toDataUrl = (imgData) => {
-          const c = document.createElement('canvas'); c.width = W; c.height = H;
-          c.getContext('2d').putImageData(imgData, 0, 0);
-          return c.toDataURL('image/png');
-        };
 
-        const edgeUrl = toDataUrl(edge);
-        const darkUrl = toDataUrl(dark);
-
-        const btn = $('.portrait-btn');
-        if (btn && !$('.hero-portrait.bp', btn)) {
-          const bp = document.createElement('img');
-          bp.className = 'hero-portrait bp';
-          bp.alt = '';
-          bp.setAttribute('aria-hidden', 'true');
-          bp.width = 1200; bp.height = 1111;
-          bp.onerror = () => bp.remove();
-          bp.src = edgeUrl;
-          btn.appendChild(bp);
-
-          const wrap = document.createElement('span');
-          wrap.className = 'lens-wrap';
-          wrap.setAttribute('aria-hidden', 'true');
-
-          const lDark = document.createElement('img');
-          lDark.className = 'hero-portrait lens-dark';
-          lDark.alt = '';
-          lDark.width = 1200; lDark.height = 1111;
-          lDark.onerror = () => wrap.remove();
-          lDark.src = darkUrl;
-
-          const lEdge = document.createElement('img');
-          lEdge.className = 'hero-portrait lens-edge';
-          lEdge.alt = '';
-          lEdge.width = 1200; lEdge.height = 1111;
-          lEdge.onerror = () => wrap.remove();
-          lEdge.src = edgeUrl;
-
-          wrap.appendChild(lDark);
-          wrap.appendChild(lEdge);
-          btn.appendChild(wrap);
-
-          requestAnimationFrame(() => {
-            bp.classList.add('is-ready');
-            wrap.classList.add('is-ready');
-          });
-        }
-      } catch {
-        // Fallback gracefully on any canvas restriction without broken images
-        $$('.hero-portrait.bp, .lens-wrap').forEach((el) => el.remove());
-      }
-    };
-    if (window.requestIdleCallback) requestIdleCallback(processLens, { timeout: 1200 });
-    else setTimeout(processLens, 150);
-  };
-  src.onerror = () => {
-    $$('.hero-portrait.bp, .lens-wrap').forEach((el) => el.remove());
-  };
-  src.src = 'assets/hero-portrait.png';
+  const motes = $('.motes');
+  if (motes && !reduced.matches) {
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    motes.innerHTML = Array.from({ length: 12 }, () => `<i style="--x:${rnd(14, 88).toFixed(1)}%;--s:${rnd(2, 5).toFixed(1)}px;--d:${rnd(6, 12).toFixed(1)}s;--dl:-${rnd(0, 12).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px"></i>`).join('');
+  }
+  const layers = $$('.hero-stage [data-depth]');
+  addEventListener('scroll', () => {
+    if (scrollY > innerHeight * 1.4) return;
+    layers.forEach((l) => l.style.setProperty('--sc-y', `${(scrollY * (0.6 - Number(l.dataset.depth)) * 0.14).toFixed(1)}px`));
+  }, { passive: true });
+  hit.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    const r = btn.getBoundingClientRect();
+    btn.style.setProperty('--pl-x', `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
+    btn.style.setProperty('--pl-y', `${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
+    btn.classList.add('is-lens');
+  });
+  hit.addEventListener('pointerleave', () => btn.classList.remove('is-lens'));
+})();
 
   const motes = $('.motes');
   if (motes && !reduced.matches) {
