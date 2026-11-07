@@ -36,7 +36,7 @@ const SERVICES = {
   },
   measurement: {
     name: 'Site Measurement', icon: 'i-ruler',
-    summary: 'Laser-accurate site measurement for home owners, interior designers, and contractors — providing a verified, millimeter-accurate base for design, CAD drawings, and carpentry.',
+    summary: 'Laser-accurate site measurement for home owners, interior designers, and contractors — providing a verified, laser-precise foundation for design, CAD drawings, and carpentry.',
     audience: 'Home owners, interior designers, contractors, modular furniture businesses',
     scope: ['Room-by-room dimensions, door and window positions, wall squareness', 'Ceiling heights, beam drops, and accurate area calculations', 'High-resolution site photographs with key observation notes'],
     deliver: ['Detailed room-by-room measurement report', 'Editable Excel area-calculation sheet with built-in formulas', 'Consolidated PDF report ready for designers and architects'],

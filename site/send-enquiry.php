@@ -432,7 +432,7 @@ if (!is_dir($logDir)) {
 $jsonRecord = [
     'id' => $leadRef,
     'timestamp' => date('c'),
-    'status' => 'PENDING',
+    'status' => 'NEW',
     'name' => $name,
     'city' => $city,
     'contact' => $contact,
@@ -440,6 +440,8 @@ $jsonRecord = [
     'stage' => $stage,
     'timeline' => $timeline,
     'details' => $details,
+    'notes' => '',
+    'delivery_status' => 'PENDING',
     'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
     'ua' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
 ];
@@ -515,7 +517,7 @@ foreach ($adminRecipients as $adminAddr) {
 $delivered = ($resendSent || $mailSent);
 
 // Finalize log records with delivery outcome
-$jsonRecord['status'] = $delivered ? 'SENT' : 'LOGGED_ONLY';
+$jsonRecord['delivery_status'] = $delivered ? 'SENT' : 'LOGGED_ONLY';
 $jsonRecord['dispatched_via'] = [
     'resend' => $resendSent,
     'php_mail' => $mailSent

@@ -74,7 +74,8 @@ function loadLeads(string $file, string $backupFile): array {
             $item['id'] = 'SSD-' . date('ymd', $ts) . '-' . strtoupper(substr(md5(($item['name'] ?? '') . $i . microtime()), 0, 4));
             $changed = true;
         }
-        if (!isset($item['status']) || $item['status'] === '') {
+        $currStatus = strtoupper(trim((string)($item['status'] ?? '')));
+        if ($currStatus === '' || in_array($currStatus, ['SENT', 'LOGGED_ONLY', 'PENDING'])) {
             $item['status'] = 'NEW';
             $changed = true;
         }
@@ -568,34 +569,130 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
     }
     .lead-details { font-size: 0.84rem; color: #cbd5e1; line-height: 1.5; white-space: pre-wrap; max-width: 360px; word-break: break-word; }
     
-    /* Notes Styling */
-    .lead-notes {
-      margin-top: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      background: rgba(0, 0, 0, 0.35);
-      border-left: 2px solid var(--brass);
+    /* Dedicated Summary Notes Column & Card */
+    .summary-note-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      min-width: 220px;
+      max-width: 320px;
+    }
+    .summary-note-text {
+      background: rgba(10, 16, 30, 0.65);
+      border-left: 3px solid var(--brass);
       border-radius: 6px;
+      padding: 0.55rem 0.75rem;
       font-size: 0.82rem;
       color: #e2e8f0;
-      line-height: 1.45;
+      line-height: 1.5;
+      word-break: break-word;
+      max-height: 120px;
+      overflow-y: auto;
     }
-    .lead-notes strong { color: var(--brass-2); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem; }
-    .btn-note {
+    .summary-note-cell.empty {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      text-align: center;
+      align-items: center;
+    }
+    .note-hint {
+      font-size: 0.76rem;
+      color: var(--mute);
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .btn-note-pill {
       display: inline-flex;
       align-items: center;
-      gap: 0.3rem;
-      background: rgba(212, 176, 106, 0.12);
-      border: 1px solid rgba(212, 176, 106, 0.35);
+      gap: 0.35rem;
+      background: rgba(212, 176, 106, 0.14);
+      border: 1px solid rgba(212, 176, 106, 0.38);
       color: var(--brass-2);
-      padding: 0.25rem 0.55rem;
-      border-radius: 6px;
-      font-size: 0.74rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 0.35rem;
-      transition: all 0.2s;
+      width: fit-content;
+      transition: all 0.2s ease;
     }
-    .btn-note:hover { background: rgba(212, 176, 106, 0.25); color: #fff; border-color: var(--brass); }
+    .btn-note-pill:hover {
+      background: var(--brass);
+      color: #0c1322;
+      border-color: var(--brass);
+      transform: translateY(-1px);
+    }
+    .btn-note-add {
+      background: rgba(22, 104, 79, 0.25);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #86efac;
+    }
+    .btn-note-add:hover {
+      background: #16684f;
+      color: #fff;
+      border-color: #22c55e;
+    }
+    
+    /* Mobile Note Block */
+    .m-card-note-block {
+      margin: 0.8rem 0;
+      padding: 0.75rem 0.85rem;
+      background: rgba(8, 14, 26, 0.8);
+      border: 1px solid rgba(212, 176, 106, 0.22);
+      border-radius: 10px;
+    }
+    .m-note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.45rem;
+    }
+    .m-note-title {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--brass-2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .m-note-text {
+      font-size: 0.84rem;
+      color: #e2e8f0;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .m-note-empty {
+      font-size: 0.8rem;
+      color: var(--mute);
+      font-style: italic;
+    }
+
+    /* Note Modal Chips */
+    .note-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+    .note-chip-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #cbd5e1;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .note-chip-btn:hover {
+      background: rgba(212, 176, 106, 0.2);
+      border-color: var(--brass);
+      color: #fff;
+    }
 
     .lead-contact { font-family: monospace; font-size: 0.9rem; color: #f1e0b8; margin-bottom: 0.5rem; }
     
@@ -938,12 +1035,12 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
       <table id="leadsTable">
         <thead>
           <tr>
-            <th>Date &amp; ID</th>
-            <th>Client</th>
-            <th>Service &amp; Scope</th>
-            <th>Stage &amp; Timeline</th>
-            <th>Status &amp; Notes</th>
-            <th style="text-align: right;">Actions</th>
+            <th style="width: 130px;">Date &amp; ID</th>
+            <th style="width: 200px;">Client &amp; Contact</th>
+            <th style="width: 240px;">Service &amp; Scope</th>
+            <th style="min-width: 240px;">Summary Note</th>
+            <th style="width: 140px;">Status</th>
+            <th style="width: 80px; text-align: right;">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -1019,26 +1116,34 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
                 </td>
                 <td>
                   <span class="lead-service"><?= $service ?></span>
+                  <?php if ($stage || $timeline): ?>
+                    <div style="font-size:0.78rem; color:var(--brass-2); margin-bottom:0.35rem;">
+                      <?= $stage ? htmlspecialchars($stage) : '' ?>
+                      <?= ($stage && $timeline) ? ' &middot; ' : '' ?>
+                      <?= $timeline ? 'Timeline: ' . htmlspecialchars($timeline) : '' ?>
+                    </div>
+                  <?php endif; ?>
                   <?php if ($details): ?>
                     <div class="lead-details"><?= $details ?></div>
                   <?php endif; ?>
-                  <?php if ($notes): ?>
-                    <div class="lead-notes">
-                      <strong>Admin Note</strong>
-                      <span><?= $notes ?></span>
-                      <div>
-                        <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', <?= htmlspecialchars(json_encode($notes), ENT_QUOTES) ?>)">Edit Note</button>
-                      </div>
-                    </div>
-                  <?php else: ?>
-                    <div>
-                      <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', '')">+ Add Note</button>
-                    </div>
-                  <?php endif; ?>
                 </td>
                 <td>
-                  <div style="font-size:0.86rem;color:#fff;font-weight:700"><?= $stage ?: '—' ?></div>
-                  <small style="color:var(--mute)"><?= $timeline ? "Timeline: {$timeline}" : '' ?></small>
+                  <?php if ($notes): ?>
+                    <div class="summary-note-cell">
+                      <div class="summary-note-text"><?= nl2br($notes) ?></div>
+                      <button class="btn-note-pill" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', <?= htmlspecialchars(json_encode($row['notes'] ?? ''), ENT_QUOTES) ?>)">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Edit Summary Note
+                      </button>
+                    </div>
+                  <?php else: ?>
+                    <div class="summary-note-cell empty">
+                      <span class="note-hint">No notes recorded</span>
+                      <button class="btn-note-pill btn-note-add" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', '')">
+                        + Add Summary Note
+                      </button>
+                    </div>
+                  <?php endif; ?>
                 </td>
                 <td>
                   <form method="POST" style="display:inline-block; margin-bottom: 0.35rem;">
@@ -1136,19 +1241,23 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
               <div class="m-card-scope"><?= $details ?></div>
             <?php endif; ?>
 
-            <?php if ($notes): ?>
-              <div class="lead-notes" style="margin-bottom:0.75rem">
-                <strong>Admin Note</strong>
-                <span><?= $notes ?></span>
-                <div>
-                  <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', <?= htmlspecialchars(json_encode($notes), ENT_QUOTES) ?>)">Edit Note</button>
-                </div>
+            <!-- Dedicated Summary Notes Block for Mobile -->
+            <div class="m-card-note-block">
+              <div class="m-note-header">
+                <strong class="m-note-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  Summary Note
+                </strong>
+                <button class="btn-note-pill <?= $notes ? '' : 'btn-note-add' ?>" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', <?= htmlspecialchars(json_encode($row['notes'] ?? ''), ENT_QUOTES) ?>)">
+                  <?= $notes ? 'Edit Note' : '+ Add Note' ?>
+                </button>
               </div>
-            <?php else: ?>
-              <div style="margin-bottom:0.75rem">
-                <button class="btn-note" type="button" onclick="openNoteModal('<?= $id ?>', <?= $idx ?>, '<?= addslashes($name) ?>', '')">+ Add Note</button>
-              </div>
-            <?php endif; ?>
+              <?php if ($notes): ?>
+                <div class="m-note-text"><?= nl2br($notes) ?></div>
+              <?php else: ?>
+                <div class="m-note-empty">No summary notes yet. Tap "+ Add Note" to add internal remarks.</div>
+              <?php endif; ?>
+            </div>
 
             <div style="font-size:0.76rem; color:var(--mute); margin-bottom: 0.6rem;">Received: <?= $dateFormatted ?></div>
 
@@ -1199,19 +1308,35 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
   <div class="modal-backdrop" id="noteModal">
     <div class="modal-card">
       <div class="modal-head">
-        <h2 id="noteModalTitle">Admin Note</h2>
+        <div>
+          <h2 id="noteModalTitle" style="font-size:1.15rem; color:#fff;">Admin Summary Note</h2>
+          <p style="font-size:0.8rem; color:var(--mute); margin-top:2px;">Private internal remarks visible only to admins</p>
+        </div>
         <button class="modal-close" type="button" onclick="closeNoteModal()">&times;</button>
       </div>
       <form method="POST">
         <input type="hidden" name="action" value="update_notes" />
         <input type="hidden" name="lead_id" id="noteModalLeadId" value="" />
         <input type="hidden" name="lead_index" id="noteModalLeadIndex" value="" />
-        <div class="form-group">
-          <label>Internal Summary &amp; Meeting Notes</label>
-          <textarea class="form-control" name="notes" id="noteModalText" rows="4" placeholder="Enter private notes (e.g., site visit scheduled for Sunday, estimate shared with client, waiting for BOQ)..."></textarea>
+        
+        <div class="form-group" style="margin-bottom:0.6rem;">
+          <label style="font-size:0.78rem; color:var(--brass-2); margin-bottom:0.35rem; display:block;">Quick Status Inserts</label>
+          <div class="note-chips">
+            <button type="button" class="note-chip-btn" onclick="insertNoteChip('📞 Called client — discussion ongoing.')">+ Called</button>
+            <button type="button" class="note-chip-btn" onclick="insertNoteChip('📅 Site visit scheduled.')">+ Site Visit</button>
+            <button type="button" class="note-chip-btn" onclick="insertNoteChip('💰 Quotation &amp; BOQ estimate sent.')">+ Quote Sent</button>
+            <button type="button" class="note-chip-btn" onclick="insertNoteChip('📐 CAD drawings in progress.')">+ In Progress</button>
+            <button type="button" class="note-chip-btn" onclick="insertNoteChip('⏳ Awaiting client feedback.')">+ Awaiting</button>
+            <button type="button" class="note-chip-btn" onclick="insertNoteChip('✅ Snag audit verified.')">+ Verified</button>
+          </div>
         </div>
-        <div style="display:flex; gap:0.8rem;">
-          <button class="btn-submit" type="submit" style="flex:2;">Save Note</button>
+
+        <div class="form-group">
+          <label>Summary Note Details</label>
+          <textarea class="form-control" name="notes" id="noteModalText" rows="4" placeholder="Enter private summary notes (e.g., site visit scheduled for Sunday, estimate shared with client, waiting for BOQ)..."></textarea>
+        </div>
+        <div style="display:flex; gap:0.8rem; margin-top:1rem;">
+          <button class="btn-submit" type="submit" style="flex:2;">Save Summary Note</button>
           <button class="btn-submit" type="button" onclick="closeNoteModal()" style="flex:1; background:rgba(255,255,255,0.08); color:#fff;">Cancel</button>
         </div>
       </form>
@@ -1301,13 +1426,22 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
     function openNoteModal(leadId, leadIndex, clientName, existingNote) {
       document.getElementById('noteModalLeadId').value = leadId;
       document.getElementById('noteModalLeadIndex').value = leadIndex;
-      document.getElementById('noteModalTitle').textContent = 'Admin Note — ' + clientName;
+      document.getElementById('noteModalTitle').textContent = 'Summary Note — ' + clientName;
       document.getElementById('noteModalText').value = existingNote || '';
       document.getElementById('noteModal').classList.add('is-open');
       document.getElementById('noteModalText').focus();
     }
     function closeNoteModal() {
       document.getElementById('noteModal').classList.remove('is-open');
+    }
+    function insertNoteChip(text) {
+      const ta = document.getElementById('noteModalText');
+      if (ta.value.trim()) {
+        ta.value = ta.value.trim() + ' ' + text;
+      } else {
+        ta.value = text;
+      }
+      ta.focus();
     }
 
     document.addEventListener('keydown', (e) => {
