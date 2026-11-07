@@ -161,11 +161,14 @@ function finishLoad() {
     if (t >= 0.74 && t < 0.88) pre?.classList.add('is-auditing');
     else pre?.classList.remove('is-auditing');
     if (t >= 0.88) pre?.classList.add('pre-done');
-    if (t < 1 || !fontsReady) requestAnimationFrame(tick);
-    else setTimeout(finishLoad, reduced.matches ? 0 : 1200);
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      setTimeout(finishLoad, reduced.matches ? 0 : 600);
+    }
   };
   requestAnimationFrame(tick);
-  setTimeout(finishLoad, 9500);
+  setTimeout(finishLoad, 6500);
 })();
 
 /* ---- Scroll: progress, ruler, rail, header state, ambient shift, process timeline ---- */
@@ -619,26 +622,6 @@ document.addEventListener('click', (e) => {
 (function portraitLens() {
   const btn = $('.portrait-btn'), hit = $('.portrait-hit');
   if (!btn || !hit) return;
-
-  const motes = $('.motes');
-  if (motes && !reduced.matches) {
-    const rnd = (a, b) => a + Math.random() * (b - a);
-    motes.innerHTML = Array.from({ length: 12 }, () => `<i style="--x:${rnd(14, 88).toFixed(1)}%;--s:${rnd(2, 5).toFixed(1)}px;--d:${rnd(6, 12).toFixed(1)}s;--dl:-${rnd(0, 12).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px"></i>`).join('');
-  }
-  const layers = $$('.hero-stage [data-depth]');
-  addEventListener('scroll', () => {
-    if (scrollY > innerHeight * 1.4) return;
-    layers.forEach((l) => l.style.setProperty('--sc-y', `${(scrollY * (0.6 - Number(l.dataset.depth)) * 0.14).toFixed(1)}px`));
-  }, { passive: true });
-  hit.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return;
-    const r = btn.getBoundingClientRect();
-    btn.style.setProperty('--pl-x', `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
-    btn.style.setProperty('--pl-y', `${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
-    btn.classList.add('is-lens');
-  });
-  hit.addEventListener('pointerleave', () => btn.classList.remove('is-lens'));
-})();
 
   const motes = $('.motes');
   if (motes && !reduced.matches) {
