@@ -6,6 +6,12 @@
 
 declare(strict_types=1);
 
+// Prevent browser and proxy caching (ensures instant real-time updates)
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+header('Expires: 0');
+
 // Set default timezone to Indian Standard Time (IST, UTC+5:30)
 date_default_timezone_set('Asia/Kolkata');
 
@@ -362,6 +368,20 @@ usort($enquiries, function($a, $b) {
     return $tsB <=> $tsA;
 });
 
+// Live Background Poll Endpoint (Checks for new leads instantly)
+if ($isAuthed && isset($_GET['api']) && $_GET['api'] === 'poll') {
+    header('Content-Type: application/json; charset=UTF-8');
+    $first = !empty($enquiries) ? $enquiries[0] : null;
+    echo json_encode([
+        'total' => count($enquiries),
+        'latest_id' => $first['id'] ?? null,
+        'latest_name' => $first['name'] ?? null,
+        'latest_timestamp' => $first['timestamp'] ?? null,
+        'server_time' => date('d M Y, h:i:s A') . ' IST'
+    ]);
+    exit;
+}
+
 // Handle CSV Export
 if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
     header('Content-Type: text/csv; charset=UTF-8');
@@ -559,6 +579,55 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
       color: var(--text);
     }
     .btn-ghost:hover { background: rgba(212, 176, 106, 0.15); border-color: var(--brass); color: #fff; }
+
+    /* Live Polling Sync Indicator */
+    .live-sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #86efac;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+      animation: livePulse 2s infinite ease-in-out;
+    }
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .live-toast {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.4rem;
+      border-radius: 14px;
+      background: #0f1c35;
+      border: 1px solid #22c55e;
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 700;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(34, 197, 94, 0.35);
+      animation: toastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
     /* Metric Cards */
     .metrics-grid {
@@ -1045,6 +1114,10 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
         </div>
       </div>
       <div class="dash-actions">
+        <div class="live-sync-badge" id="liveSyncBadge" title="Real-time listener active (auto-checks every 8 seconds)">
+          <span class="live-dot"></span>
+          <span id="liveSyncText">Live Sync: Active</span>
+        </div>
         <button class="btn-action btn-primary" type="button" onclick="openAddModal()">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           + Add Lead
@@ -1061,7 +1134,10 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
           <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
           Export CSV
         </a>
-        <a class="btn-action btn-ghost" href="leads.php">Refresh</a>
+        <button class="btn-action btn-ghost" type="button" onclick="window.location.reload();" title="Refresh leads view">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Refresh
+        </button>
         <a class="btn-action btn-ghost" href="?logout=1">Lock</a>
       </div>
     </header>
@@ -1645,6 +1721,40 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
         filterRows();
       });
     });
+
+    // Live Real-Time Background Polling (Checks every 8 seconds)
+    const currentLatestLeadId = <?= json_encode(!empty($enquiries[0]['id']) ? $enquiries[0]['id'] : '') ?>;
+    let isPollingActive = false;
+
+    function showLiveToast(msg) {
+      const existing = document.querySelector('.live-toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'live-toast';
+      toast.innerHTML = `<span class="live-dot"></span><span>${msg}</span>`;
+      document.body.appendChild(toast);
+    }
+
+    async function pollForNewLeads() {
+      if (isPollingActive) return;
+      isPollingActive = true;
+      try {
+        const res = await fetch('leads.php?api=poll&_t=' + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.latest_id && currentLatestLeadId && data.latest_id !== currentLatestLeadId) {
+            showLiveToast('🟢 New Lead Received: ' + (data.latest_name || 'Client') + '! Refreshing dashboard...');
+            setTimeout(() => { window.location.reload(); }, 1200);
+          }
+        }
+      } catch (_) {}
+      finally {
+        isPollingActive = false;
+      }
+    }
+
+    // Check for updates every 8 seconds
+    setInterval(pollForNewLeads, 8000);
   </script>
 <?php endif; ?>
 
