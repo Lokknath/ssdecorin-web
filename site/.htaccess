@@ -1,0 +1,95 @@
+# ======================================================================
+# Sai Sreenivasa Decorin — Apache / LiteSpeed Configuration (MilesWeb)
+# Domain: ssdecorin.com
+# ======================================================================
+
+# ----------------------------------------------------------------------
+# 1. Error Handling: Serve static 404 page
+# ----------------------------------------------------------------------
+ErrorDocument 404 /404.html
+
+# ----------------------------------------------------------------------
+# 2. Rewrites: HTTPS Enforcement & Canonical Non-WWW Redirect
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Enforce HTTPS
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Canonical host: redirect www.ssdecorin.com -> ssdecorin.com
+  RewriteCond %{HTTP_HOST} ^www\.ssdecorin\.com$ [NC]
+  RewriteRule ^ https://ssdecorin.com%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 3. Security Headers
+# ----------------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Prevent clickjacking
+  Header always set X-Frame-Options "DENY"
+
+  # Prevent MIME-type sniffing
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Referrer Policy
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Disable unused sensitive browser features
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+  # Strict-Transport-Security (2-year HSTS with preload)
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+  # Content-Security-Policy
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https://images.unsplash.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://api.web3forms.com; connect-src 'self' https://api.web3forms.com https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://formsubmit.co"
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 4. MIME Types
+# ----------------------------------------------------------------------
+<IfModule mod_mime.c>
+  AddType image/webp .webp
+  AddType image/svg+xml .svg .svgz
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+  AddType text/xml .xml
+  AddType text/plain .txt
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 5. Gzip / Deflate Compression
+# ----------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+  AddOutputFilterByType DEFLATE application/json application/xml application/xhtml+xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 6. Browser Caching
+# ----------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+
+  # Immediate revalidation for HTML, XML, and PHP
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/xml "access plus 0 seconds"
+  ExpiresByType application/xml "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/plain "access plus 0 seconds"
+
+  # 1-year immutable caching for static assets
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+</IfModule>

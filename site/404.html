@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#080d17" />
+    <title>Page Not Found — Sai Sreenivasa Decorin</title>
+    <link rel="icon" type="image/png" sizes="128x128" href="assets/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Manrope:wght@400;600;700&display=swap" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .error-page {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        text-align: center;
+        background: radial-gradient(circle at 50% 30%, #0d1526, var(--bg));
+      }
+      .error-card {
+        max-width: 32rem;
+        padding: clamp(2rem, 5vw, 3.5rem);
+        border-radius: var(--r-lg);
+      }
+      .error-code {
+        font-family: var(--serif);
+        font-size: clamp(4rem, 10vw, 6.5rem);
+        color: var(--brass);
+        line-height: 1;
+        margin-bottom: 1rem;
+      }
+      .error-title {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        margin-bottom: 0.8rem;
+      }
+      .error-desc {
+        color: var(--ink-2);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+      .error-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="error-page">
+      <div class="error-card glass">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page not found</h1>
+        <p class="error-desc">The page you are looking for has been moved or does not exist. Let's get you back on track.</p>
+        <a class="btn btn-brass btn-lg error-btn" href="/">
+          <span>Back to Homepage</span>
+          <svg class="ico" style="width:1.1em;height:1.1em;" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M8 7h9v9" /></svg>
+        </a>
+      </div>
+    </main>
+  </body>
+</html>
