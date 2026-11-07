@@ -27,57 +27,57 @@ HTMLDialogElement.prototype.showModal = function showModal() {
 const SERVICES = {
   measurement: {
     name: 'Site Measurement', icon: 'i-ruler',
-    summary: 'Professional site measurement for homeowners, designers, contractors and modular furniture businesses — organised into a reliable base for design, drawings and execution.',
-    audience: 'Homeowners, designers, contractors, modular furniture businesses',
-    scope: ['Room-wise dimensions, door and window locations, key site observations', 'Wall, ceiling and other relevant area calculations', 'Site photographs and supporting measurements'],
-    deliver: ['Room-wise measurement report', 'Editable Excel area-calculation sheet with formulas', 'Consolidated PDF report'],
-    share: ['Name and mobile', 'City / site location', 'Property type and built-up area', 'Preferred visit date and site access details'],
+    summary: 'Laser-accurate site measurement for homeowners, interior designers, and contractors — providing a verified, millimeter-accurate base for design, CAD drawings, and carpentry.',
+    audience: 'Homeowners, interior designers, contractors, modular furniture businesses',
+    scope: ['Room-by-room dimensions, door and window positions, wall squareness', 'Ceiling heights, beam drops, and accurate area calculations', 'High-resolution site photographs with key observation notes'],
+    deliver: ['Detailed room-by-room measurement report', 'Editable Excel area-calculation sheet with built-in formulas', 'Consolidated PDF report ready for designers and architects'],
+    share: ['Your name and mobile number', 'Site address / city location', 'Property type (flat, villa, office) and approx built-up area', 'Preferred site visit date and access details'],
     price: { main: '₹4 per sq. ft. of built-up area', note: 'Minimum booking ₹3,000 · taxes extra if applicable' }
   },
   check: {
     name: 'Interio Check', icon: 'i-check-list',
-    summary: 'Independent technical inspection for homeowners and businesses who want proposed or ongoing interior work verified before money or materials are committed.',
-    audience: 'Homeowners and businesses with proposed or ongoing interior work',
-    scope: ['Quotation and BOQ review', 'Material and hardware specification checks', 'Workmanship and installation inspection', 'Snag identification and rectification guidance'],
-    deliver: ['Technical inspection report', 'Findings and observations', 'Snag / rectification checklist and recommendations'],
-    share: ['Name, contact and location', 'Project type, stage and area', 'Inspection you need', 'Quotation / BOQ copy and preferred date'],
-    price: { main: 'Custom quote', note: 'Based on your project stage and scope' }
+    summary: 'Independent 48-point technical inspection for homeowners and businesses. We verify contractor quotations, inspect delivered materials, and audit workmanship before you release payments.',
+    audience: 'Homeowners and businesses with planned, ongoing, or ready-for-handover interiors',
+    scope: ['Quotation and BOQ rate analysis against real market standards', 'Plywood grade, laminate brand, and hardware specification verification', 'Workmanship, joint alignment, edge-banding, and finish audit', 'Comprehensive snag identification and rectification checklist'],
+    deliver: ['Independent technical inspection report', 'Detailed findings with annotated photographic evidence', 'Actionable snag list with priority rectification guidelines'],
+    share: ['Name, contact number, and site city', 'Project type, stage (quotation, execution, handover), and area', 'Specific inspection concern or decision needed', 'Copy of contractor quote / BOQ and preferred audit date'],
+    price: { main: 'Custom quote', note: 'Based on property size and inspection stage' }
   },
   drafting: {
     name: 'Modular Drafting', icon: 'i-compass',
-    summary: 'Technical drafting for kitchens, wardrobes, TV units, bedroom storage and other modular furniture — drawings a factory and an installer can both work from.',
-    audience: 'Designers, contractors, modular furniture makers, homeowners',
-    scope: ['Dimensioned 2D layouts and detailed construction drawings', 'Furniture hardware positioning and material specifications', 'Production and installation detail coordination'],
-    deliver: ['CAD or PDF technical drawings, as agreed', 'Bill of Materials (BOM) and cutting list, where included', 'Hardware and installation details, as agreed'],
-    share: ['Name / company and contact', 'Furniture category and number of modules', 'Dimensions and design files', 'Expected deliverables and required date'],
-    price: { main: 'Custom quote', note: 'Based on furniture category, number of modules and the output you need' }
+    summary: 'Production-ready 2D layouts and construction drawings for kitchens, wardrobes, and TV units — dimensioned with hardware clearances and cutting lists a factory can build from directly.',
+    audience: 'Interior designers, contractors, modular furniture makers, homeowners',
+    scope: ['Dimensioned 2D plans, elevations, and detailed cross-sections', 'Hardware positioning, hinge clearances, and material specifications', 'Panel cutting lists and Bill of Materials (BOM) coordination'],
+    deliver: ['CAD (DWG) and PDF technical drawings ready for production', 'Bill of Materials (BOM) and panel optimization cutting lists', 'Hardware schedule and installation detailing guidelines'],
+    share: ['Name / studio name and contact details', 'Furniture category (kitchen, wardrobe, etc.) and number of units', 'Rough room dimensions or design references / 3D renders', 'Required drawing output format and target deadline'],
+    price: { main: 'Custom quote', note: 'Based on furniture modules, room count, and required outputs' }
   },
   training: {
     name: 'Interior Training', icon: 'i-cap',
-    summary: 'Practical business and technical training for designers, contractors, furniture professionals, students and entrepreneurs — knowledge you can apply on site.',
-    audience: 'Designers, contractors, furniture professionals, students, entrepreneurs',
-    scope: ['Modular furniture construction and production', 'Costing, estimation and BOQ preparation', 'Materials, hardware and site measurement', 'Drafting, execution and vendor coordination'],
-    deliver: ['Structured learning sessions', 'Practical assignments and materials as applicable', 'Completion documentation, if offered'],
-    share: ['Name and contact', 'Your background', 'Training topic of interest', 'Online or offline · individual or batch · preferred start date'],
-    price: { main: 'Priced per course', note: 'Depends on the course and training mode — online or offline' }
+    summary: 'Practical, site-tested technical training for designers, contractors, furniture professionals, students, and entrepreneurs — real-world knowledge you can apply immediately on site.',
+    audience: 'Designers, contractors, modular furniture makers, students, entrepreneurs',
+    scope: ['Modular furniture joinery, panel processing, and factory workflows', 'Accurate costing, market pricing, and professional BOQ preparation', 'Core materials (IS plywood grades, laminates, acrylics) and hardware', 'Site measurement techniques, CAD detailing, and vendor coordination'],
+    deliver: ['Structured interactive training sessions (online or offline)', 'Real-world costing templates, BOQ formats, and reference guides', 'Course completion certificate and ongoing mentorship support'],
+    share: ['Your name and contact details', 'Your current background (student, designer, contractor, business owner)', 'Specific topic or skill you want to master', 'Learning mode preference (online or offline · 1-on-1 or batch)'],
+    price: { main: 'Priced per course', note: 'Depends on course module and learning mode (online or offline)' }
   },
   vendors: {
     name: 'Vendor Directory', icon: 'i-pin',
-    summary: 'Category-wise and city-wise access to interior-industry supplier, manufacturer and installer information — find the right source faster.',
-    audience: 'Homeowners, designers, contractors, furniture businesses',
-    scope: ['Plywood, laminates, hardware, glass and profile suppliers', 'Modular and loose-furniture manufacturers', 'Carpenters, painters, electricians and other service vendors', 'Category- and city-based vendor search'],
-    deliver: ['Vendor listings and contact details as permitted by the selected package', 'Sourcing enquiry coordination, where offered'],
-    share: ['Name, contact and city', 'Vendor category needed', 'Product / service required and volume', 'Timeline'],
-    price: { main: 'Priced per access package', note: 'Packages by vendor category and city' }
+    summary: 'Curated directory of verified suppliers, modular factories, hardware dealers, and skilled trades across Hyderabad and Bengaluru — helping you source materials and labor with complete confidence.',
+    audience: 'Homeowners, interior designers, contractors, furniture businesses',
+    scope: ['Plywood, laminate, veneer, acrylic, glass, and profile suppliers', 'Modular cabinetry factories and OEM carcass fabricators', 'Skilled finishing trades: experienced carpenters, painters, and electricians', 'Categorized search by material type, grade, and city location'],
+    deliver: ['Direct verified vendor contact listings according to selected package', 'Material sourcing coordination and manufacturer introductions'],
+    share: ['Your name, contact number, and city', 'Vendor or material category needed (plywood, hardware, modular, labor)', 'Approximate project volume or requirement', 'Target procurement timeline'],
+    price: { main: 'Priced per access package', note: 'Packages organized by trade category and city' }
   },
   consulting: {
     name: 'Homeowner Consultant', icon: 'i-user',
-    summary: 'Independent technical guidance for homeowners — including projects executed by your own vendors or contractors. An expert on your side from budget to handover.',
-    audience: 'Homeowners planning or running an interior project',
-    scope: ['Budget feasibility and BOQ review', 'Technical drawings and material guidance', 'Vendor and quotation comparison, execution coordination', 'Inspections, snag tracking and handover support'],
-    deliver: ['Consultancy scope and technical documentation as agreed', 'Review notes, inspections and snag reports as applicable'],
-    share: ['Name, contact and location', 'Property type, area and indicative budget', 'Current stage and start date', 'Whether contractors are already appointed'],
-    price: { main: '10% online · 15% on-site', note: 'Of total project cost — online across India, on-site in Hyderabad and Bengaluru' }
+    summary: 'Dedicated independent technical advisor for homeowners. We protect your budget, review contractor estimates, inspect site execution, and track snags — working 100% on your side from start to finish.',
+    audience: 'Homeowners planning a new interior or currently running an interior project',
+    scope: ['Budget planning, quote comparison, and BOQ rate validation', 'Technical drawing verification and material specification advice', 'Vendor negotiation support and execution milestone tracking', 'Independent on-site inspections, snag lists, and final handover signoff'],
+    deliver: ['Comprehensive advisory roadmap and written review notes', 'Quote comparison matrix and material verification reports', 'Milestone inspection audits and final snag-free handover certificate'],
+    share: ['Your name, contact details, and property location', 'Property type, approximate carpet area, and indicative budget', 'Current project stage and planned start/completion dates', 'Whether contractors or designers are already shortlisted or hired'],
+    price: { main: '10% online · 15% on-site', note: 'Of total project cost — online pan-India, on-site in Hyderabad and Bengaluru' }
   }
 };
 const SERVICE_SELECT_VALUE = { measurement: 'Site Measurement', check: 'Interio Check', drafting: 'Modular Drafting', training: 'Interior Training', vendors: 'Vendor Directory', consulting: 'Homeowner Consultant' };
