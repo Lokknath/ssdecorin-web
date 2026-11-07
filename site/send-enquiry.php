@@ -169,31 +169,16 @@ $htmlBody = <<<HTML
 </html>
 HTML;
 
-$boundary = "----=_DecorinPart_" . md5(uniqid((string)mt_rand(), true));
-$msgId = "<" . time() . "." . bin2hex(random_bytes(8)) . "@ssdecorin.com>";
-
 $headers = [
     'MIME-Version: 1.0',
-    'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
-    'From: "Sai Sreenivasa Decorin" <noreply@ssdecorin.com>',
+    'Content-Type: text/html; charset=UTF-8',
+    'From: Sai Sreenivasa Decorin <noreply@ssdecorin.com>',
     "Reply-To: {$replyToEmail}",
-    'Message-ID: ' . $msgId,
-    'Date: ' . date('r'),
     'X-Mailer: PHP/' . phpversion()
 ];
 
-$emailContent = "--{$boundary}\r\n" .
-    "Content-Type: text/plain; charset=UTF-8\r\n" .
-    "Content-Transfer-Encoding: 8bit\r\n\r\n" .
-    $plainBody . "\r\n\r\n" .
-    "--{$boundary}\r\n" .
-    "Content-Type: text/html; charset=UTF-8\r\n" .
-    "Content-Transfer-Encoding: 8bit\r\n\r\n" .
-    $htmlBody . "\r\n\r\n" .
-    "--{$boundary}--";
-
-// 6. Send email via native mail() with strict envelope sender flag
-$sent = @mail($primaryRecipient, $subject, $emailContent, implode("\r\n", $headers), "-f noreply@ssdecorin.com");
+// 6. Send email via native mail()
+$sent = @mail($primaryRecipient, $subject, $htmlBody, implode("\r\n", $headers));
 
 // Log submission locally on server for audit trail
 $logDir = __DIR__ . '/logs';
