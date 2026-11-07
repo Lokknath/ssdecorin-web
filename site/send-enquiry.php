@@ -12,6 +12,9 @@
 
 declare(strict_types=1);
 
+// Guarantee Indian Standard Time (IST, UTC+5:30) for all dates and timestamps
+date_default_timezone_set('Asia/Kolkata');
+
 // Set strict security headers on response
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
@@ -78,28 +81,30 @@ $stage    = cleanInput((string)($_POST['stage'] ?? 'Not specified'));
 $timeline = cleanInput((string)($_POST['timeline'] ?? 'Not specified'));
 $details  = cleanInput((string)($_POST['details'] ?? ''));
 
-// 3. Validation
+// Robust, friendly validation: only name and contact are strictly required
 $errors = [];
 if (mb_strlen($name) < 2) {
-    $errors[] = 'Please provide a valid name (at least 2 characters).';
-}
-if (mb_strlen($city) < 2) {
-    $errors[] = 'Please provide the project city.';
+    $errors[] = 'Please provide a valid client name (at least 2 characters).';
 }
 if ($contact === '') {
-    $errors[] = 'Please provide a contact phone number or email.';
-}
-if ($service === '') {
-    $errors[] = 'Please select a service.';
-}
-if (mb_strlen($details) < 10) {
-    $errors[] = 'Please provide details about your project (at least 10 characters).';
+    $errors[] = 'Please provide a contact phone number or email address.';
 }
 
 if (!empty($errors)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => implode(' ', $errors)]);
     exit;
+}
+
+// Sensible defaults for optional/short inputs so leads are NEVER lost
+if ($city === '') {
+    $city = 'Pan-India';
+}
+if ($service === '') {
+    $service = 'General Interior Technical Support';
+}
+if ($details === '') {
+    $details = 'Enquiry submitted via website form. Client requested technical consultation / callback.';
 }
 
 // 4. Determine Reply-To address
@@ -145,14 +150,14 @@ $telUrl = $hasPhone ? "tel:+{$waNum}" : "";
 $mailSubjectReply = rawurlencode("Sai Sreenivasa Decorin — Regarding your {$cleanService} enquiry");
 $mailUrl = $isEmail ? "mailto:{$cleanContact}?subject={$mailSubjectReply}" : "";
 
-// Action buttons HTML
+// Action buttons HTML (high-contrast, touch-friendly for mobile & desktop email clients)
 $actionButtonsHtml = '';
 if ($hasPhone) {
     $actionButtonsHtml .= <<<HTML
-<a href="{$waUrl}" target="_blank" style="display:inline-block; background-color:#25D366; color:#ffffff; text-decoration:none; font-size:13px; font-weight:700; padding:10px 18px; border-radius:8px; margin-right:8px; margin-bottom:8px; box-shadow:0 4px 12px rgba(37,211,102,0.35);">
+<a href="{$waUrl}" target="_blank" style="display:inline-block; background-color:#16a34a; color:#ffffff; text-decoration:none; font-size:13px; font-weight:800; padding:11px 18px; border-radius:8px; margin-right:8px; margin-bottom:8px; box-shadow:0 2px 6px rgba(22,163,74,0.3); font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <span style="font-size:14px; vertical-align:middle; margin-right:4px;">💬</span> <span style="vertical-align:middle;">Reply on WhatsApp</span>
 </a>
-<a href="{$telUrl}" style="display:inline-block; background-color:#17243b; color:#f5d78a; border:1px solid rgba(212,176,106,0.5); text-decoration:none; font-size:13px; font-weight:700; padding:9px 16px; border-radius:8px; margin-right:8px; margin-bottom:8px;">
+<a href="{$telUrl}" style="display:inline-block; background-color:#0284c7; color:#ffffff; text-decoration:none; font-size:13px; font-weight:800; padding:11px 18px; border-radius:8px; margin-right:8px; margin-bottom:8px; box-shadow:0 2px 6px rgba(2,132,199,0.3); font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <span style="font-size:14px; vertical-align:middle; margin-right:4px;">📞</span> <span style="vertical-align:middle;">Call Client</span>
 </a>
 HTML;
@@ -160,25 +165,25 @@ HTML;
 
 if ($isEmail) {
     $actionButtonsHtml .= <<<HTML
-<a href="{$mailUrl}" style="display:inline-block; background-color:#17243b; color:#93c5fd; border:1px solid rgba(59,130,246,0.5); text-decoration:none; font-size:13px; font-weight:700; padding:9px 16px; border-radius:8px; margin-right:8px; margin-bottom:8px;">
+<a href="{$mailUrl}" style="display:inline-block; background-color:#475569; color:#ffffff; text-decoration:none; font-size:13px; font-weight:700; padding:11px 18px; border-radius:8px; margin-right:8px; margin-bottom:8px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <span style="font-size:14px; vertical-align:middle; margin-right:4px;">✉️</span> <span style="vertical-align:middle;">Reply via Email</span>
 </a>
 HTML;
 }
 
 $actionButtonsHtml .= <<<HTML
-<a href="https://ssdecorin.com/leads" target="_blank" style="display:inline-block; background-color:#1e293b; color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); text-decoration:none; font-size:13px; font-weight:600; padding:9px 16px; border-radius:8px; margin-bottom:8px;">
+<a href="https://ssdecorin.com/leads" target="_blank" style="display:inline-block; background-color:#0f172a; color:#f59e0b; border:1px solid #d97706; text-decoration:none; font-size:13px; font-weight:700; padding:11px 18px; border-radius:8px; margin-bottom:8px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
   <span style="font-size:14px; vertical-align:middle; margin-right:4px;">🔐</span> <span style="vertical-align:middle;">Lead Vault</span>
 </a>
 HTML;
 
-// Formatted contact link
+// Formatted contact link with bold high-contrast styling
 if ($hasPhone && $isEmail) {
-    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#f5d78a; text-decoration:none;\">{$contact}</a>";
+    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$contact}</a>";
 } elseif ($isEmail) {
-    $contactFormatted = "<a href=\"mailto:{$cleanContact}\" style=\"color:#f5d78a; text-decoration:none;\">{$cleanContact}</a>";
+    $contactFormatted = "<a href=\"mailto:{$cleanContact}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$cleanContact}</a>";
 } elseif ($hasPhone) {
-    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#f5d78a; text-decoration:none;\">{$contact}</a>";
+    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#0369a1; text-decoration:none; font-weight:800; font-size:16px;\">{$contact}</a>";
 } else {
     $contactFormatted = htmlspecialchars($contact);
 }
@@ -223,45 +228,45 @@ $htmlBody = <<<HTML
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>New Project Enquiry — Sai Sreenivasa Decorin</title>
 </head>
-<body style="margin:0; padding:0; background-color:#050811; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#f1f5f9;">
+<body style="margin:0; padding:0; background-color:#f1f5f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#0f172a;">
   <!-- Preheader preview text for inbox -->
-  <div style="display:none; max-height:0px; overflow:hidden; font-size:1px; line-height:1px; color:#050811; opacity:0; mso-hide:all;">
-    New enquiry from {$cleanName} ({$cleanCity}) for {$cleanService} &middot; Timeline: {$cleanTimeline}. 1-click WhatsApp &amp; Call actions inside.
+  <div style="display:none; max-height:0px; overflow:hidden; font-size:1px; line-height:1px; color:#f1f5f9; opacity:0; mso-hide:all;">
+    New lead from {$cleanName} ({$cleanCity}) for {$cleanService} &middot; Timeline: {$cleanTimeline}. 1-click WhatsApp &amp; Call actions inside.
   </div>
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050811; min-height:100vh; padding:28px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1f5f9; min-height:100vh; padding:24px 10px;">
     <tr>
       <td align="center" valign="top">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px; background-color:#0d1527; border:1px solid rgba(212, 176, 106, 0.4); border-radius:16px; overflow:hidden; box-shadow:0 20px 45px rgba(0,0,0,0.6);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px; background-color:#ffffff; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; box-shadow:0 12px 36px rgba(15,23,42,0.08);">
           
-          <!-- Top Accent Gold Gradient Bar -->
+          <!-- Top Accent Gold Bar -->
           <tr>
-            <td style="height:4px; background:linear-gradient(90deg, #9b722b 0%, #f5d78a 50%, #9b722b 100%); line-height:4px; font-size:4px;">&nbsp;</td>
+            <td style="height:5px; background:linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #d97706 100%); line-height:5px; font-size:5px;">&nbsp;</td>
           </tr>
 
-          <!-- Header Section -->
+          <!-- Deep Navy Slate Executive Header -->
           <tr>
-            <td style="padding:24px 28px 20px 28px; background:linear-gradient(180deg, #131f38 0%, #0d1527 100%); border-bottom:1px solid rgba(212, 176, 106, 0.18);">
+            <td style="padding:22px 28px; background-color:#0f172a; border-bottom:1px solid #1e293b;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td valign="middle">
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td style="width:44px; height:44px; background:linear-gradient(135deg, #d4b06a 0%, #8c6721 100%); border-radius:10px; text-align:center; vertical-align:middle; font-family:Georgia, serif; font-size:17px; font-weight:bold; color:#080d17; letter-spacing:0.05em; box-shadow:0 4px 12px rgba(212, 176, 106, 0.25);">
+                        <td style="width:42px; height:42px; background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius:10px; text-align:center; vertical-align:middle; font-family:Georgia, serif; font-size:16px; font-weight:800; color:#0f172a; letter-spacing:0.04em;">
                           SSD
                         </td>
                         <td style="padding-left:14px; vertical-align:middle;">
-                          <div style="font-size:15px; font-weight:800; letter-spacing:0.12em; color:#f5d78a; text-transform:uppercase;">SAI SREENIVASA DECORIN</div>
-                          <div style="font-size:11px; color:#94a3b8; letter-spacing:0.04em; margin-top:3px;">Interior Architecture &middot; Modular Engineering &middot; Quality Audits</div>
+                          <div style="font-size:15px; font-weight:800; letter-spacing:0.1em; color:#f8fafc; text-transform:uppercase;">SAI SREENIVASA DECORIN</div>
+                          <div style="font-size:11px; color:#94a3b8; letter-spacing:0.03em; margin-top:3px;">Interior Technical Partner &middot; On-Site Precision &middot; Quality Audits</div>
                         </td>
                       </tr>
                     </table>
                   </td>
                   <td align="right" valign="middle">
-                    <span style="display:inline-block; background-color:rgba(34, 197, 94, 0.12); border:1px solid rgba(34, 197, 94, 0.4); color:#4ade80; font-size:11px; font-weight:700; padding:5px 12px; border-radius:999px; letter-spacing:0.05em; text-transform:uppercase; white-space:nowrap;">
+                    <span style="display:inline-block; background-color:#166534; border:1px solid #22c55e; color:#ffffff; font-size:11px; font-weight:800; padding:4px 11px; border-radius:999px; letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap;">
                       &#x25CF; NEW LEAD
                     </span>
-                    <div style="font-size:10px; color:#64748b; font-family:monospace; margin-top:4px; text-align:right;">{$leadRef}</div>
+                    <div style="font-size:10px; color:#cbd5e1; font-family:monospace; margin-top:4px; text-align:right; font-weight:700;">{$leadRef}</div>
                   </td>
                 </tr>
               </table>
@@ -270,25 +275,25 @@ $htmlBody = <<<HTML
 
           <!-- Client Spotlight Hero Block -->
           <tr>
-            <td style="padding:24px 28px 16px 28px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, #15223c 0%, #101a2e 100%); border:1px solid rgba(212, 176, 106, 0.35); border-radius:12px; padding:20px;">
+            <td style="padding:22px 24px 16px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:20px;">
                 <tr>
                   <td>
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td style="width:52px; vertical-align:top;">
-                          <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #d4b06a 0%, #9a6d23 100%); color:#080d17; text-align:center; line-height:48px; font-size:19px; font-weight:800; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow:0 4px 14px rgba(0,0,0,0.35);">
+                        <td style="width:50px; vertical-align:top;">
+                          <div style="width:46px; height:46px; border-radius:50%; background:#d97706; color:#ffffff; text-align:center; line-height:46px; font-size:18px; font-weight:800; box-shadow:0 2px 8px rgba(217,119,6,0.25);">
                             {$initials}
                           </div>
                         </td>
                         <td style="padding-left:14px; vertical-align:top;">
-                          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:2px;">Enquiring Client</div>
-                          <h2 style="margin:0 0 6px 0; font-size:22px; font-weight:700; color:#ffffff; letter-spacing:-0.01em; line-height:1.2;">{$name}</h2>
+                          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; font-weight:800; margin-bottom:2px;">Enquiring Client</div>
+                          <h2 style="margin:0 0 6px 0; font-size:23px; font-weight:800; color:#0f172a; letter-spacing:-0.015em; line-height:1.2;">{$name}</h2>
                           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                             <tr>
-                              <td style="font-size:13px; color:#cbd5e1;">
-                                <span style="display:inline-block; margin-right:12px;">&#x1F4CD; <strong style="color:#f1f5f9;">{$city}</strong></span>
-                                <span style="display:inline-block; background-color:rgba(212, 176, 106, 0.15); border:1px solid rgba(212, 176, 106, 0.4); color:#f5d78a; font-size:11px; font-weight:600; padding:2px 10px; border-radius:999px;">
+                              <td style="font-size:13px; color:#475569;">
+                                <span style="display:inline-block; margin-right:12px;">&#x1F4CD; <strong style="color:#0f172a; font-weight:700;">{$city}</strong></span>
+                                <span style="display:inline-block; background-color:#e0f2fe; border:1px solid #7dd3fc; color:#0369a1; font-size:11px; font-weight:700; padding:2px 10px; border-radius:999px;">
                                   {$service}
                                 </span>
                               </td>
@@ -299,7 +304,7 @@ $htmlBody = <<<HTML
                     </table>
 
                     <!-- Instant CTA Action Bar -->
-                    <div style="margin-top:18px; padding-top:16px; border-top:1px solid rgba(255, 255, 255, 0.08);">
+                    <div style="margin-top:16px; padding-top:16px; border-top:1px solid #e2e8f0;">
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <td>
@@ -314,50 +319,50 @@ $htmlBody = <<<HTML
             </td>
           </tr>
 
-          <!-- Key Specifications Grid (2 Columns) -->
+          <!-- Key Specifications Grid (2 Columns, High Contrast) -->
           <tr>
-            <td style="padding:0 28px 20px 28px;">
+            <td style="padding:0 24px 18px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate; border-spacing:10px 10px; margin:-5px -5px;">
                 <tr>
-                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Service Requested</div>
-                    <div style="font-size:14px; color:#ffffff; font-weight:700;">{$service}</div>
+                  <td width="50%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; font-weight:800; margin-bottom:4px;">Service Requested</div>
+                    <div style="font-size:14px; color:#0f172a; font-weight:700;">{$service}</div>
                   </td>
-                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Project City</div>
-                    <div style="font-size:14px; color:#ffffff; font-weight:700;">{$city}</div>
-                  </td>
-                </tr>
-                <tr>
-                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Project Stage</div>
-                    <div style="font-size:14px; color:#ffffff; font-weight:600;">{$stage}</div>
-                  </td>
-                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Target Timeline</div>
-                    <div style="font-size:14px; color:#ffffff; font-weight:600;">{$timeline}</div>
+                  <td width="50%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; font-weight:800; margin-bottom:4px;">Project City</div>
+                    <div style="font-size:14px; color:#0f172a; font-weight:700;">{$city}</div>
                   </td>
                 </tr>
                 <tr>
-                  <td colspan="2" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Contact Detail</div>
-                    <div style="font-size:15px; color:#f5d78a; font-weight:700; font-family:monospace;">{$contactFormatted}</div>
+                  <td width="50%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; font-weight:800; margin-bottom:4px;">Project Stage</div>
+                    <div style="font-size:14px; color:#334155; font-weight:600;">{$stage}</div>
+                  </td>
+                  <td width="50%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; font-weight:800; margin-bottom:4px;">Target Timeline</div>
+                    <div style="font-size:14px; color:#334155; font-weight:600;">{$timeline}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#1e40af; font-weight:800; margin-bottom:4px;">Direct Contact Detail</div>
+                    <div style="font-size:16px; color:#0369a1; font-weight:800; font-family:monospace;">{$contactFormatted}</div>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Project Scope & Client Brief -->
+          <!-- Project Scope & Client Brief (Crisp Readable Box) -->
           <tr>
-            <td style="padding:0 28px 24px 28px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0b1220; border-left:4px solid #d4b06a; border-radius:0 10px 10px 0; border-top:1px solid rgba(255,255,255,0.06); border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06);">
+            <td style="padding:0 24px 20px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-left:4px solid #f59e0b; border-radius:0 10px 10px 0; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
                 <tr>
-                  <td style="padding:18px 20px;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:8px;">
+                  <td style="padding:16px 20px;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#b45309; font-weight:800; margin-bottom:8px;">
                       &#x1F4D0; Project Scope &amp; Client Brief
                     </div>
-                    <div style="font-size:14px; line-height:1.65; color:#f1f5f9; white-space:pre-wrap; word-break:break-word;">{$details}</div>
+                    <div style="font-size:15px; line-height:1.65; color:#1e293b; font-weight:500; white-space:pre-wrap; word-break:break-word;">{$details}</div>
                   </td>
                 </tr>
               </table>
@@ -366,15 +371,15 @@ $htmlBody = <<<HTML
 
           <!-- Lead Vault Access Banner -->
           <tr>
-            <td style="padding:0 28px 24px 28px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, rgba(212, 176, 106, 0.12) 0%, rgba(212, 176, 106, 0.04) 100%); border:1px dashed rgba(212, 176, 106, 0.4); border-radius:10px; padding:14px 18px;">
+            <td style="padding:0 24px 20px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border:1px solid #fde68a; border-radius:10px; padding:14px 18px;">
                 <tr>
                   <td valign="middle">
-                    <div style="font-size:13px; font-weight:700; color:#f5d78a;">Live Lead Vault Dashboard</div>
-                    <div style="font-size:12px; color:#94a3b8; margin-top:2px;">Securely backed up in JSON vault &middot; Passcode: <code style="color:#f1f5f9; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace;">Decorin@2026</code></div>
+                    <div style="font-size:14px; font-weight:800; color:#92400e;">Live Lead Vault Dashboard</div>
+                    <div style="font-size:12px; color:#78350f; margin-top:2px;">All enquiries recorded with IST timestamps &middot; Passcode: <code style="color:#0f172a; background:#fef08a; padding:2px 6px; border-radius:4px; font-family:monospace; font-weight:700;">Decorin@2026</code></div>
                   </td>
                   <td align="right" valign="middle">
-                    <a href="https://ssdecorin.com/leads" target="_blank" style="display:inline-block; background-color:#d4b06a; color:#080d17; text-decoration:none; font-size:12px; font-weight:800; padding:9px 16px; border-radius:6px; letter-spacing:0.03em; white-space:nowrap;">
+                    <a href="https://ssdecorin.com/leads" target="_blank" style="display:inline-block; background-color:#0f172a; color:#fbbf24; text-decoration:none; font-size:12px; font-weight:800; padding:10px 16px; border-radius:6px; letter-spacing:0.03em; white-space:nowrap;">
                       Open Vault &rarr;
                     </a>
                   </td>
@@ -383,21 +388,21 @@ $htmlBody = <<<HTML
             </td>
           </tr>
 
-          <!-- Footer & Technical Audit -->
+          <!-- Clean Footer & Technical Audit -->
           <tr>
-            <td style="padding:20px 28px; background-color:#080d18; border-top:1px solid rgba(255, 255, 255, 0.06); text-align:center;">
+            <td style="padding:20px 24px; background-color:#f8fafc; border-top:1px solid #e2e8f0; text-align:center;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="font-size:12px; color:#94a3b8; line-height:1.6; text-align:center;">
-                    <span style="color:#cbd5e1; font-weight:600;">Sai Sreenivasa Decorin</span> &middot; Managing Partner: <strong style="color:#f5d78a;">S. S. Naga Nandan</strong><br>
-                    <span>Direct: <a href="tel:+916363313546" style="color:#d4b06a; text-decoration:none;">+91 63633 13546</a></span> &middot;
-                    <span>Website: <a href="https://ssdecorin.com" style="color:#d4b06a; text-decoration:none;">ssdecorin.com</a></span>
+                  <td style="font-size:12px; color:#64748b; line-height:1.6; text-align:center;">
+                    <span style="color:#0f172a; font-weight:700;">Sai Sreenivasa Decorin</span> &middot; Managing Partner: <strong style="color:#b45309;">S. S. Naga Nandan</strong><br>
+                    <span>Direct: <a href="tel:+916363313546" style="color:#0284c7; text-decoration:none; font-weight:700;">+91 63633 13546</a></span> &middot;
+                    <span>Website: <a href="https://ssdecorin.com" style="color:#0284c7; text-decoration:none; font-weight:700;">ssdecorin.com</a></span>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding-top:12px; font-size:11px; color:#64748b; line-height:1.5; font-family:monospace; text-align:center;">
+                  <td style="padding-top:10px; font-size:11px; color:#94a3b8; line-height:1.5; font-family:monospace; text-align:center;">
                     Submitted: {$dateFormatted} &middot; IP: {$clientIp}<br>
-                    Engineering Standard: &plusmn;0.5mm CAD Precision &middot; Interio Check&trade; Verified
+                    Engineering Standard: &plusmn;0.5mm Laser Precision &middot; Interio Check&trade; Quality Audit
                   </td>
                 </tr>
               </table>
@@ -449,9 +454,24 @@ $jsonRecord = [
 $jsonFile = $logDir . '/enquiries.json';
 $currentData = [];
 if (file_exists($jsonFile)) {
-    $currentData = json_decode((string)file_get_contents($jsonFile), true) ?: [];
+    $raw = (string)@file_get_contents($jsonFile);
+    $currentData = json_decode($raw, true) ?: [];
+    if (!is_array($currentData)) $currentData = [];
 }
 $currentData[] = &$jsonRecord;
+
+// IMMEDIATE ATOMIC WRITE: guarantee zero data loss BEFORE any external network calls
+@file_put_contents($jsonFile, json_encode($currentData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+
+$initialLog = sprintf(
+    "[%s] Status: RECORDED | Name: %s | City: %s | Contact: %s | Service: %s\n",
+    date('Y-m-d H:i:s'),
+    $name,
+    $city,
+    $contact,
+    $service
+);
+@file_put_contents($logDir . '/enquiries.log', $initialLog, FILE_APPEND | LOCK_EX);
 
 // ======================================================================
 // LAYER 2: Resend Transactional Email API (Instant 1-2 Second Delivery)

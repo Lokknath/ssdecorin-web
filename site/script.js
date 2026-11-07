@@ -5,8 +5,6 @@
 /* ---- Config (edit here) ---- */
 const CONTACT_EMAIL = 'saisc26@gmail.com'; // enquiry form recipient
 const WHATSAPP_NUMBER = '916363313546';          // international format, no "+"
-const FORM_ENDPOINT = `https://formsubmit.co/ajax/${CONTACT_EMAIL}`;
-const WEB3FORMS_KEY = ''; // optional, more reliable: free access key from web3forms.com (enter CONTACT_EMAIL there). When set, it is used instead of FormSubmit.
 
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
@@ -717,13 +715,23 @@ function renderService(key, dir = 1) {
   $$('.sm-tab', smTabs).forEach((t) => { const on = t.dataset.smGo === key; t.classList.toggle('is-active', on); t.setAttribute('aria-pressed', on); });
   const imgW = isMobile ? 800 : 1400;
   const coverHtml = (key === 'check')
-    ? `<figure class="sm-cover sm-cover-video"><video class="sm-video-player" controls playsinline preload="metadata" poster="assets/interio-check-poster.jpg"><source src="assets/interio-check-video.mp4" type="video/mp4" />Your browser does not support HTML5 video.</video><span class="sm-video-badge"><svg class="ico"><use href="#i-play"></use></svg> Interio Check Explainer (3:43)</span></figure>`
+    ? `<figure class="sm-cover sm-cover-video">
+        <video class="sm-video-player" controls playsinline preload="metadata" poster="assets/interio-check-poster.jpg">
+          <source src="assets/interio-check-video.mp4" type="video/mp4" />
+          Your browser does not support HTML5 video.
+        </video>
+        <div class="sm-video-bar">
+          <span class="sm-video-badge"><svg class="ico"><use href="#i-play"></use></svg> Walkthrough (3:43)</span>
+          <button class="sm-cinema-trigger" type="button" data-open-interio-video><svg class="ico"><use href="#i-expand"></use></svg> Theater Mode</button>
+        </div>
+      </figure>`
     : `<figure class="sm-cover"><img src="https://images.unsplash.com/${pid}?w=${imgW}&q=75&auto=format&fit=crop" alt="${palt}" /><i class="sm-scan"></i></figure>`;
+  const medalHtml = (key === 'check') ? '' : `<div class="sm-medal"><svg class="ico"><use href="#${s.icon}"></use></svg></div>`;
   serviceBody.innerHTML = `
     ${coverHtml}
     <div class="sm-main">
       <div class="sm-head">
-        <div class="sm-medal"><svg class="ico"><use href="#${s.icon}"></use></svg></div>
+        ${medalHtml}
         <h2 id="service-title">${words(s.name)}</h2>
         <p class="sm-summary">${s.summary}</p>
         <div class="sm-chips"><b>Best for</b>${chips}</div>
@@ -791,12 +799,81 @@ serviceDialog.addEventListener('keydown', (e) => {
 serviceDialog.addEventListener('close', () => {
   $$('video', serviceDialog).forEach((v) => { try { v.pause(); } catch (_) {} });
 });
+
+/* ---- Interio Check Cinema Modal ---- */
+const interioCinemaDialog = $('#interioVideoDialog');
+const interioCinemaVideo = $('#interioCinemaVideo');
+
+function openInterioCinema() {
+  if (!interioCinemaDialog) return;
+  $$('video').forEach((v) => { try { v.pause(); } catch (_) {} });
+  interioCinemaDialog.classList.remove('is-closing');
+  interioCinemaDialog.showModal();
+  if (interioCinemaVideo) {
+    try {
+      interioCinemaVideo.currentTime = 0;
+      interioCinemaVideo.play().catch(() => {});
+    } catch (_) {}
+  }
+}
+
+function closeInterioCinema() {
+  if (!interioCinemaDialog || !interioCinemaDialog.open) return;
+  if (interioCinemaVideo) {
+    try { interioCinemaVideo.pause(); } catch (_) {}
+  }
+  closeDialog(interioCinemaDialog);
+}
+
+if (interioCinemaDialog) {
+  $$('[data-close-cinema], [data-close]', interioCinemaDialog).forEach((b) => b.addEventListener('click', closeInterioCinema));
+  interioCinemaDialog.addEventListener('close', () => {
+    if (interioCinemaVideo) { try { interioCinemaVideo.pause(); } catch (_) {} }
+  });
+}
+
+/* ---- Walkthrough Reel Play Button Toggle ---- */
+const reelPlayerBox = $('#reelPlayerBox');
+const reelVideo = $('#reelVideo');
+const reelPlayBtn = $('#reelPlayBtn');
+
+if (reelPlayBtn && reelVideo && reelPlayerBox) {
+  reelPlayBtn.addEventListener('click', () => {
+    reelVideo.setAttribute('controls', 'true');
+    reelVideo.play().then(() => {
+      reelPlayerBox.classList.add('is-playing');
+    }).catch(() => {
+      reelPlayerBox.classList.add('is-playing');
+    });
+  });
+
+  reelVideo.addEventListener('play', () => {
+    reelPlayerBox.classList.add('is-playing');
+  });
+
+  reelVideo.addEventListener('pause', () => {
+    reelPlayerBox.classList.remove('is-playing');
+  });
+
+  reelVideo.addEventListener('ended', () => {
+    reelPlayerBox.classList.remove('is-playing');
+  });
+}
+
 document.addEventListener('click', (e) => {
+  const openInterio = e.target.closest('[data-open-interio-video], .svc-video-pill');
+  if (openInterio) {
+    e.preventDefault();
+    e.stopPropagation();
+    openInterioCinema();
+    return;
+  }
   const open = e.target.closest('[data-service], [data-open-service]');
   if (open && !e.target.closest('dialog')) { e.preventDefault(); openService(open.dataset.service || open.dataset.openService, open.getBoundingClientRect()); return; }
   const enquire = e.target.closest('[data-enquire]');
   if (enquire) {
     if (serviceDialog.open) serviceDialog.close();
+    if (interioCinemaDialog && interioCinemaDialog.open) interioCinemaDialog.close();
     $('select[name="service"]').value = SERVICE_SELECT_VALUE[enquire.dataset.enquire];
     $('#contact').scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth' });
     setTimeout(() => $('input[name="name"]').focus({ preventScroll: true }), 800);
@@ -976,34 +1053,24 @@ function showError(message, fallback) {
   errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 async function sendEnquiry(data) {
-  const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 12000);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
-    let res, json;
-
-    // 1. Primary: native PHP mailer on MilesWeb hosting
-    try {
-      res = await fetch('send-enquiry.php', { method: 'POST', body: data, headers: { Accept: 'application/json' }, signal: ctrl.signal });
-      json = await res.json().catch(() => ({}));
-      if (res.ok && json.success === true && json.email_sent === true) return json;
-    } catch {
-      // PHP endpoint not reachable or delivery failed, continue to fallbacks
+    const res = await fetch('send-enquiry.php', {
+      method: 'POST',
+      body: data,
+      headers: { Accept: 'application/json' },
+      signal: ctrl.signal
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.success === true) {
+      return json;
     }
-
-    // 2. Secondary fallback: Web3Forms if key configured
-    if (WEB3FORMS_KEY) {
-      data.append('access_key', WEB3FORMS_KEY); data.append('subject', data.get('_subject')); data.append('from_name', 'Sai Sreenivasa Decorin website');
-      res = await fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { Accept: 'application/json' }, body: data, signal: ctrl.signal });
-      json = await res.json().catch(() => ({}));
-      if (res.ok && json.success === true) return json;
-    }
-
-    // 3. Tertiary fallback: FormSubmit endpoint
-    res = await fetch(FORM_ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: data, signal: ctrl.signal });
-    json = await res.json().catch(() => ({}));
-    if (res.ok && (json.success === 'true' || json.success === true)) return json;
-
-    throw new Error('Email delivery could not be confirmed.');
-  } finally { clearTimeout(timer); }
+    const errMsg = json.message || 'Unable to record enquiry. Please try again or reach us via WhatsApp.';
+    throw new Error(errMsg);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

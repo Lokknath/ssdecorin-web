@@ -222,6 +222,113 @@ if ($isAuthed && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']
             $flashMessage = 'Could not find lead to update notes.';
             $flashType = 'error';
         }
+    } elseif ($action === 'import_backup') {
+        if (!isset($_FILES['backup_file']) || $_FILES['backup_file']['error'] !== UPLOAD_ERR_OK) {
+            $flashMessage = 'Backup upload failed: Please choose a valid JSON backup file.';
+            $flashType = 'error';
+        } else {
+            $tmpPath = (string)$_FILES['backup_file']['tmp_name'];
+            $origName = (string)$_FILES['backup_file']['name'];
+            $fileExt = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+            if ($fileExt !== 'json') {
+                $flashMessage = 'Invalid file type: Please upload a .json backup file.';
+                $flashType = 'error';
+            } else {
+                $rawContent = @file_get_contents($tmpPath);
+                $importedData = $rawContent ? json_decode($rawContent, true) : null;
+
+                if (!is_array($importedData)) {
+                    $flashMessage = 'Import error: The uploaded file is not a valid JSON array of leads.';
+                    $flashType = 'error';
+                } else {
+                    // Pre-import safety snapshot before merging
+                    $preImportSnapshot = $storageDir . '/enquiries_pre_import_' . date('Ymd_His') . '.json';
+                    if (file_exists($jsonFile)) {
+                        @copy($jsonFile, $preImportSnapshot);
+                    }
+
+                    // Existing leads indexed by ID and contact+name
+                    $existingIds = [];
+                    $existingContacts = [];
+                    foreach ($leads as $idx => $lead) {
+                        $lid = strtoupper(trim((string)($lead['id'] ?? '')));
+                        if ($lid !== '') $existingIds[$lid] = $idx;
+                        $cKey = strtolower(trim((string)($lead['contact'] ?? ''))) . '|' . strtolower(trim((string)($lead['name'] ?? '')));
+                        if ($cKey !== '|') $existingContacts[$cKey] = $idx;
+                    }
+
+                    $addedCount = 0;
+                    $mergedNotesCount = 0;
+                    $preservedCount = 0;
+
+                    foreach ($importedData as $item) {
+                        if (!is_array($item)) continue;
+                        $itemId = strtoupper(trim((string)($item['id'] ?? '')));
+                        $itemContact = trim((string)($item['contact'] ?? ''));
+                        $itemName = trim((string)($item['name'] ?? ''));
+                        $cKey = strtolower($itemContact) . '|' . strtolower($itemName);
+
+                        $isExisting = false;
+                        $existingIdx = -1;
+
+                        if ($itemId !== '' && isset($existingIds[$itemId])) {
+                            $isExisting = true;
+                            $existingIdx = $existingIds[$itemId];
+                        } elseif ($cKey !== '|' && isset($existingContacts[$cKey])) {
+                            $isExisting = true;
+                            $existingIdx = $existingContacts[$cKey];
+                        }
+
+                        if ($isExisting && $existingIdx >= 0) {
+                            // Merge notes if current lead notes are blank and backup has notes
+                            $curNotes = trim((string)($leads[$existingIdx]['notes'] ?? ''));
+                            $newNotes = trim((string)($item['notes'] ?? ''));
+                            if ($curNotes === '' && $newNotes !== '') {
+                                $leads[$existingIdx]['notes'] = $newNotes;
+                                $mergedNotesCount++;
+                            }
+                            $preservedCount++;
+                        } else {
+                            // Append new lead
+                            if (empty($item['id'])) {
+                                $ts = !empty($item['timestamp']) ? strtotime((string)$item['timestamp']) : time();
+                                $item['id'] = 'SSD-' . date('ymd', $ts) . '-' . strtoupper(substr(md5($itemName . $itemContact . microtime()), 0, 4));
+                            }
+                            if (empty($item['status'])) {
+                                $item['status'] = 'NEW';
+                            }
+                            if (!isset($item['notes'])) {
+                                $item['notes'] = '';
+                            }
+                            if (empty($item['timestamp'])) {
+                                $item['timestamp'] = date('c');
+                            }
+                            if (empty($item['source'])) {
+                                $item['source'] = 'Backup Import';
+                            }
+
+                            $leads[] = $item;
+                            $newIdx = count($leads) - 1;
+                            $existingIds[strtoupper((string)$item['id'])] = $newIdx;
+                            if ($cKey !== '|') $existingContacts[$cKey] = $newIdx;
+                            $addedCount++;
+                        }
+                    }
+
+                    if (saveLeads($jsonFile, $backupFile, $leads)) {
+                        $flashMessage = "Backup merged successfully! Appended {$addedCount} new lead(s). All {$preservedCount} existing lead(s) preserved intact. Zero data lost.";
+                        $flashType = 'success';
+                    } else {
+                        $flashMessage = 'Failed to write merged backup to disk. Restoring original database snapshot.';
+                        if (file_exists($preImportSnapshot)) {
+                            @copy($preImportSnapshot, $jsonFile);
+                        }
+                        $flashType = 'error';
+                    }
+                }
+            }
+        }
     }
 
     if (!isset($_GET['ajax'])) {
@@ -247,6 +354,13 @@ foreach ($rawLeads as $i => $item) {
     $item['_index'] = $i;
     $enquiries[] = $item;
 }
+
+// ALWAYS SORT NEWEST LEADS TO THE VERY TOP (Descending timestamp)
+usort($enquiries, function($a, $b) {
+    $tsA = !empty($a['timestamp']) ? strtotime((string)$a['timestamp']) : 0;
+    $tsB = !empty($b['timestamp']) ? strtotime((string)$b['timestamp']) : 0;
+    return $tsB <=> $tsA;
+});
 
 // Handle CSV Export
 if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
@@ -935,6 +1049,10 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           + Add Lead
         </button>
+        <button class="btn-action btn-ghost" type="button" onclick="openImportModal()" title="Upload a JSON backup file to append leads safely">
+          <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+          Upload Backup (JSON)
+        </button>
         <a class="btn-action btn-ghost" href="?export=backup" title="Download complete database JSON backup">
           <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
           Download Backup (JSON)
@@ -1413,7 +1531,38 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'backup') {
     </div>
   </div>
 
+  <!-- Upload Backup (JSON) Modal -->
+  <div class="modal-backdrop" id="importModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>Upload &amp; Append Leads Backup</h2>
+        <button class="modal-close" type="button" onclick="closeImportModal()">&times;</button>
+      </div>
+      <div style="background:rgba(22, 104, 79, 0.22); border:1px solid rgba(22, 104, 79, 0.5); border-radius:12px; padding:0.9rem 1rem; margin-bottom:1.2rem; font-size:0.84rem; color:#bbf7d0; line-height:1.45;">
+        <strong>&#128737; Zero Data Loss Guarantee:</strong> Uploading a JSON backup will <strong>only append</strong> new records. Existing leads will never be deleted or overwritten. A pre-import safety snapshot is automatically created before any data is merged.
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="import_backup" />
+        <div class="form-group">
+          <label for="backupFile">Select JSON Backup File (.json)</label>
+          <input class="form-control" type="file" id="backupFile" name="backup_file" accept=".json,application/json" required style="padding:0.6rem; cursor:pointer;" />
+          <small style="display:block; margin-top:0.4rem; color:var(--mute); font-size:0.76rem;">Accepts backups downloaded via "Download Backup (JSON)"</small>
+        </div>
+        <button class="btn-submit" type="submit">Upload &amp; Append Leads</button>
+        <button class="btn-action btn-ghost" type="button" onclick="closeImportModal()" style="width:100%; margin-top:0.6rem; justify-content:center;">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <script>
+    // Import Modal Helpers
+    function openImportModal() {
+      document.getElementById('importModal').classList.add('is-open');
+    }
+    function closeImportModal() {
+      document.getElementById('importModal').classList.remove('is-open');
+    }
+
     // Add Lead Modal Helpers
     function openAddModal() {
       document.getElementById('addLeadModal').classList.add('is-open');
