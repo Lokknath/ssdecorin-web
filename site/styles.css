@@ -183,13 +183,13 @@ html.has-modal button, html.has-modal a, html.has-modal summary, html.has-modal 
 .is-leaving .preloader-inner { scale: 0.94; }
 .pre-stage { position: relative; display: grid; place-items: center; width: min(88vw, 680px); aspect-ratio: 700 / 460; }
 .pre-plan { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--brass); stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.9s, filter 0.9s, scale 0.9s var(--ease); }
-.pre-plan .pp { stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 0; opacity: 0.85; animation: draw 1.2s var(--ease-io) calc(0.35s + var(--n) * 0.55s) backwards; }
+.pre-plan .pp { stroke-width: 1.6; stroke-dasharray: 1; stroke-dashoffset: 0; opacity: 0.85; animation: draw 1.6s var(--ease-io) calc(0.4s + var(--n) * 0.55s) backwards; }
 .pre-plan .pp.wall { stroke-width: 3.4; stroke: var(--brass-2); opacity: 1; }
 .pre-plan .pp.thin { stroke-width: 1; opacity: 0.55; }
-.pre-plan .pp.first { animation: draw 1.5s linear 0.35s backwards; }
+.pre-plan .pp.first { animation: draw 2.4s linear 0.4s backwards; }
 .pre-plan .pp.dim { stroke: rgba(255, 255, 255, 0.7); stroke-width: 1.1; }
 .pre-pen { fill: #fff; stroke: none; filter: drop-shadow(0 0 7px #f1e0b8) drop-shadow(0 0 14px rgba(212, 176, 106, 0.9)); }
-.pre-dim { position: absolute; z-index: 2; font: 800 0.8rem var(--sans); letter-spacing: 0.08em; color: var(--brass-2); counter-reset: dimn var(--n); animation: dimCount 1.4s var(--ease) 2.7s both, fadeIn 0.5s ease 2.6s backwards; transition: opacity 0.6s; }
+.pre-dim { position: absolute; z-index: 2; font: 800 0.8rem var(--sans); letter-spacing: 0.08em; color: var(--brass-2); counter-reset: dimn var(--n); animation: dimCount 1.5s var(--ease) 2.5s both, fadeIn 0.5s ease 2.4s backwards; transition: opacity 0.6s; }
 .pre-dim::before { content: counter(dimn) " mm"; }
 .pre-dim-w { left: 50%; top: -3.2%; translate: -50% 0; }
 .pre-dim-h { left: -1%; top: 50%; rotate: -90deg; translate: -50% 0; transform-origin: left top; }
@@ -352,9 +352,10 @@ html:not(.js) .preloader { display: none; }
 
 .hero-portrait { display: block; width: 100%; height: auto; }
 .hero-portrait.photo { filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5)); }
-.hero-portrait.bp, .lens-wrap, .lens-wrap img { position: absolute; left: 0; top: 0; pointer-events: none; }
-.hero-portrait.bp, .lens-wrap img { opacity: 0; transition: opacity 0.5s ease; }
-.hero-portrait.bp[data-ready="true"], .lens-wrap img[data-ready="true"] { opacity: 1; }
+.hero-portrait.bp, .lens-wrap { position: absolute; left: 0; top: 0; pointer-events: none; display: none !important; }
+.hero-portrait.bp[data-ready="true"] { display: block !important; opacity: 1; }
+.lens-wrap[data-ready="true"] { display: block !important; }
+.lens-wrap img { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; opacity: 1; }
 .lens-wrap { inset: 0; -webkit-mask-image: radial-gradient(circle var(--pl-r) at var(--pl-x) var(--pl-y), #000 62%, transparent 100%); mask-image: radial-gradient(circle var(--pl-r) at var(--pl-x) var(--pl-y), #000 62%, transparent 100%); }
 .lens-ring { position: absolute; left: var(--pl-x); top: var(--pl-y); width: calc(var(--pl-r) * 1.62); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 1.5px solid var(--brass-2); box-shadow: 0 0 22px rgba(241, 224, 184, 0.45), inset 0 0 22px rgba(241, 224, 184, 0.2); pointer-events: none; opacity: 0; transition: opacity 0.3s, width 0.5s var(--ease); }
 .lens-ring::before, .lens-ring::after { content: ""; position: absolute; background: var(--brass-2); opacity: 0.85; }

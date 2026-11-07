@@ -119,12 +119,12 @@ function finishLoad() {
   setTimeout(() => $('.preloader')?.remove(), reduced.matches ? 50 : 1700); // stop its animations for good once it is hidden
 }
 (function preload() {
-  const duration = reduced.matches ? 1 : 2100;
+  const duration = reduced.matches ? 1 : 3800;
   const start = performance.now();
-  const ready = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 1600))]);
+  const ready = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2200))]);
   let fontsReady = false; ready.then(() => { fontsReady = true; });
   const pre = $('.preloader'), statusEl = $('[data-preload-status]');
-  const steps = [[0, 'Taking measurements'], [0.34, 'Drafting the layout'], [0.68, 'Checking every detail'], [0.84, 'Sai Sreenivasa Decorin']];
+  const steps = [[0, 'Taking measurements'], [0.28, 'Drafting the layout'], [0.62, 'Checking every detail'], [0.82, 'Sai Sreenivasa Decorin']];
   let stepIdx = 0;
   const tick = (now) => {
     const t = Math.min((now - start) / duration, 1);
@@ -137,11 +137,11 @@ function finishLoad() {
       stepIdx = next; statusEl.textContent = steps[next][1];
       statusEl.classList.remove('is-swap'); void statusEl.offsetWidth; statusEl.classList.add('is-swap');
     }
-    if (t >= 0.84) pre?.classList.add('pre-done');
-    if (t < 1 || !fontsReady) requestAnimationFrame(tick); else setTimeout(finishLoad, reduced.matches ? 0 : 1100);
+    if (t >= 0.82) pre?.classList.add('pre-done');
+    if (t < 1 || !fontsReady) requestAnimationFrame(tick); else setTimeout(finishLoad, reduced.matches ? 0 : 1300);
   };
   requestAnimationFrame(tick);
-  setTimeout(finishLoad, 7500);
+  setTimeout(finishLoad, 8500);
 })();
 
 /* ---- Scroll: progress, ruler, rail, header state, ambient shift, process timeline ---- */
@@ -632,6 +632,10 @@ document.addEventListener('click', (e) => {
               el.src = url;
               el.dataset.ready = 'true';
             });
+            const wrap = $('.lens-wrap');
+            if (wrap && $('.lens-edge[data-ready="true"]') && $('.lens-dark[data-ready="true"]')) {
+              wrap.dataset.ready = 'true';
+            }
           });
         };
         bake(edge, '.hero-portrait.bp, .lens-edge'); bake(dark, '.lens-dark');
