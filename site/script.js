@@ -25,6 +25,15 @@ HTMLDialogElement.prototype.showModal = function showModal() {
 
 /* ---- Service content (shown in the detail dialog) ---- */
 const SERVICES = {
+  consulting: {
+    name: 'Homeowner Consultant', icon: 'i-user',
+    summary: 'Dedicated independent technical advisor for homeowners. We protect your budget, review contractor estimates, inspect site execution, and track snags — working 100% on your side from start to finish.',
+    audience: 'Homeowners planning a new interior or currently running an interior project',
+    scope: ['Budget planning, quote comparison, and BOQ rate validation', 'Technical drawing verification and material specification advice', 'Vendor negotiation support and execution milestone tracking', 'Independent on-site inspections, snag lists, and final handover signoff'],
+    deliver: ['Comprehensive advisory roadmap and written review notes', 'Quote comparison matrix and material verification reports', 'Milestone inspection audits and final snag-free handover certificate'],
+    share: ['Your name, contact details, and property location', 'Property type, approximate carpet area, and indicative budget', 'Current project stage and planned start/completion dates', 'Whether contractors or designers are already shortlisted or hired'],
+    price: { main: '10% online · 15% on-site', note: 'Of total project cost — online pan-India, on-site in Hyderabad and Bengaluru' }
+  },
   measurement: {
     name: 'Site Measurement', icon: 'i-ruler',
     summary: 'Laser-accurate site measurement for homeowners, interior designers, and contractors — providing a verified, millimeter-accurate base for design, CAD drawings, and carpentry.',
@@ -69,15 +78,6 @@ const SERVICES = {
     deliver: ['Direct verified vendor contact listings according to selected package', 'Material sourcing coordination and manufacturer introductions'],
     share: ['Your name, contact number, and city', 'Vendor or material category needed (plywood, hardware, modular, labor)', 'Approximate project volume or requirement', 'Target procurement timeline'],
     price: { main: 'Priced per access package', note: 'Packages organized by trade category and city' }
-  },
-  consulting: {
-    name: 'Homeowner Consultant', icon: 'i-user',
-    summary: 'Dedicated independent technical advisor for homeowners. We protect your budget, review contractor estimates, inspect site execution, and track snags — working 100% on your side from start to finish.',
-    audience: 'Homeowners planning a new interior or currently running an interior project',
-    scope: ['Budget planning, quote comparison, and BOQ rate validation', 'Technical drawing verification and material specification advice', 'Vendor negotiation support and execution milestone tracking', 'Independent on-site inspections, snag lists, and final handover signoff'],
-    deliver: ['Comprehensive advisory roadmap and written review notes', 'Quote comparison matrix and material verification reports', 'Milestone inspection audits and final snag-free handover certificate'],
-    share: ['Your name, contact details, and property location', 'Property type, approximate carpet area, and indicative budget', 'Current project stage and planned start/completion dates', 'Whether contractors or designers are already shortlisted or hired'],
-    price: { main: '10% online · 15% on-site', note: 'Of total project cost — online pan-India, on-site in Hyderabad and Bengaluru' }
   }
 };
 const SERVICE_SELECT_VALUE = { measurement: 'Site Measurement', check: 'Interio Check', drafting: 'Modular Drafting', training: 'Interior Training', vendors: 'Vendor Directory', consulting: 'Homeowner Consultant' };
@@ -590,6 +590,7 @@ $$('[data-count]').forEach((el) => countObserver.observe(el));
 /* ---- Dialogs ---- */
 function closeDialog(dlg) {
   if (!dlg.open || dlg.classList.contains('is-closing')) return;
+  $$('video', dlg).forEach((v) => { try { v.pause(); } catch (_) {} });
   if (reduced.matches) { dlg.close(); return; }
   dlg.classList.add('is-closing');
   setTimeout(() => { dlg.classList.remove('is-closing'); if (dlg.open) dlg.close(); }, 320);
@@ -758,6 +759,7 @@ function renderService(key, dir = 1) {
 }
 function openService(key, from) {
   if (!SERVICES[key]) return;
+  $$('video').forEach((v) => { try { v.pause(); } catch (_) {} });
   renderService(key, 1);
   serviceDialog.classList.remove('is-closing');
   serviceDialog.showModal();
