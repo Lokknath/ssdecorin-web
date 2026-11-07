@@ -139,7 +139,7 @@ function finishLoad() {
   const tick = (now) => {
     const t = Math.min((now - start) / duration, 1);
     const eased = (1 - Math.cos(Math.PI * t)) / 2;
-    const shown = fontsReady || t < 0.9 ? eased : Math.min(eased, 0.9);
+    const shown = eased;
     if (countEl) countEl.textContent = Math.round(shown * 100);
     if (barEl) barEl.style.width = `${shown * 100}%`;
     if (coordsEl) {
@@ -164,11 +164,12 @@ function finishLoad() {
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      setTimeout(finishLoad, reduced.matches ? 0 : 600);
+      setTimeout(finishLoad, reduced.matches ? 0 : 500);
     }
   };
   requestAnimationFrame(tick);
-  setTimeout(finishLoad, 6500);
+  pre?.addEventListener('click', finishLoad, { once: true });
+  setTimeout(finishLoad, 6000);
 })();
 
 /* ---- Scroll: progress, ruler, rail, header state, ambient shift, process timeline ---- */
