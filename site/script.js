@@ -1036,7 +1036,10 @@ form.addEventListener('submit', async (event) => {
     if (mailBtn) {
       mailBtn.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Project Enquiry: ${data.get('service')} — ${data.get('name')}`)}&body=${encodeURIComponent(lastBrief)}`;
     }
-    form.classList.add('is-sent'); successBox.hidden = false; successBox.focus();
+    form.classList.add('is-sent');
+    successBox.hidden = false;
+    successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    successBox.focus({ preventScroll: true });
     form.reset(); fields.forEach((f) => check(f, false));
   } catch {
     showError('Email delivery could not be confirmed right now. Please tap below to send your enquiry directly on WhatsApp:', true);
@@ -1044,7 +1047,12 @@ form.addEventListener('submit', async (event) => {
     submitBtn.classList.remove('is-loading'); submitBtn.disabled = false; label.textContent = 'Send enquiry';
   }
 });
-$('[data-form-reset]').addEventListener('click', () => { form.classList.remove('is-sent'); successBox.hidden = true; $('input[name="name"]').focus(); });
+$('[data-form-reset]').addEventListener('click', () => {
+  form.classList.remove('is-sent');
+  successBox.hidden = true;
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('input[name="name"]')?.focus();
+});
 $('[data-copy-brief]').addEventListener('click', async (e) => {
   const span = $('span', e.currentTarget);
   try { await navigator.clipboard.writeText(lastBrief); span.textContent = 'Copied ✓'; } catch { span.textContent = 'Copy not available'; }
