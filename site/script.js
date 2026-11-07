@@ -639,14 +639,6 @@ document.addEventListener('click', (e) => {
     if (scrollY > innerHeight * 1.4) return;
     layers.forEach((l) => l.style.setProperty('--sc-y', `${(scrollY * (0.6 - Number(l.dataset.depth)) * 0.14).toFixed(1)}px`));
   }, { passive: true });
-  hit.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return;
-    const r = btn.getBoundingClientRect();
-    btn.style.setProperty('--pl-x', `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
-    btn.style.setProperty('--pl-y', `${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
-    btn.classList.add('is-lens');
-  });
-  hit.addEventListener('pointerleave', () => btn.classList.remove('is-lens'));
 })();
 
 /* ---- Services marquee: Constant calm luxury pace, zero scroll acceleration ---- */

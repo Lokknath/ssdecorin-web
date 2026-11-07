@@ -418,19 +418,7 @@ html:not(.js) .preloader { display: none; }
 
 .hero-portrait { display: block; width: 100%; height: auto; -webkit-clip-path: none; clip-path: none; }
 .hero-portrait.photo { filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5)); position: relative; z-index: 1; -webkit-clip-path: none; clip-path: none; }
-.hero-portrait.bp { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; z-index: 2; opacity: 0; mix-blend-mode: screen; }
-.lens-wrap { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; -webkit-mask-image: radial-gradient(circle var(--pl-r) at var(--pl-x) var(--pl-y), #000 60%, transparent 95%); mask-image: radial-gradient(circle var(--pl-r) at var(--pl-x) var(--pl-y), #000 60%, transparent 95%); transition: opacity 0.25s var(--ease); }
-.lens-wrap img { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; }
-.portrait-btn.is-lens .lens-wrap { opacity: 1; }
-.lens-ring { position: absolute; z-index: 5; left: var(--pl-x); top: var(--pl-y); width: calc(var(--pl-r) * 1.62); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; border: 1.5px solid var(--brass-2); box-shadow: 0 0 22px rgba(241, 224, 184, 0.45), inset 0 0 22px rgba(241, 224, 184, 0.2); pointer-events: none; opacity: 0; transition: opacity 0.3s, width 0.5s var(--ease); }
-.lens-ring::before, .lens-ring::after { content: ""; position: absolute; background: var(--brass-2); opacity: 0.85; }
-.lens-ring::before { left: 50%; top: -9px; width: 1.5px; height: 18px; translate: -50% 0; }
-.lens-ring::after { top: 50%; left: -9px; height: 1.5px; width: 18px; translate: 0 -50%; }
-.portrait-btn.is-lens { --pl-r: clamp(80px, 11vw, 120px); }
-.portrait-btn.is-lens .lens-ring { opacity: 1; }
-.scan { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: linear-gradient(90deg, transparent calc(100% - 70px), rgba(241, 224, 184, 0.4) calc(100% - 3px), #fff calc(100% - 1px), transparent 100%); transform: translateX(-100%); }
-@media (hover: none) { .portrait-btn { --pl-r: 90px; } .lens-ring { display: none; } }
-@keyframes lensDrift { 0% { --pl-x: 30%; --pl-y: 30%; } 50% { --pl-x: 62%; --pl-y: 52%; } 100% { --pl-x: 40%; --pl-y: 74%; } }
+.lens-wrap, .lens-ring { display: none !important; }
 
 /* orbiting service circles — they sit behind the portrait */
 .orbit { position: absolute; z-index: 2; left: 9%; top: 6%; width: 82%; aspect-ratio: 1; container-type: inline-size; animation: spin 80s linear infinite; pointer-events: none; }
