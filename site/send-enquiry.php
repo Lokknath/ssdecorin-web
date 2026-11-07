@@ -543,18 +543,23 @@ if (!empty($resendKey)) {
 }
 
 // ======================================================================
-// LAYER 3: MilesWeb Standard PHP mail() Dispatch
+// LAYER 3: MilesWeb Standard PHP mail() Dispatch (DISABLED - RESEND ONLY)
 // ======================================================================
+// Free backup mail() is commented out to eliminate delivery delays and duplicate alerts.
 $mailSent = false;
-foreach ($adminRecipients as $adminAddr) {
-    if (filter_var($adminAddr, FILTER_VALIDATE_EMAIL)) {
-        if (@mail($adminAddr, $subject, $htmlBody, implode("\r\n", $headers))) {
-            $mailSent = true;
+/*
+if (!empty($config['use_php_mail'])) {
+    foreach ($adminRecipients as $adminAddr) {
+        if (filter_var($adminAddr, FILTER_VALIDATE_EMAIL)) {
+            if (@mail($adminAddr, $subject, $htmlBody, implode("\r\n", $headers))) {
+                $mailSent = true;
+            }
         }
     }
 }
+*/
 
-$delivered = ($resendSent || $mailSent);
+$delivered = $resendSent;
 
 // Finalize log records with delivery outcome
 $jsonRecord['delivery_status'] = $delivered ? 'SENT' : 'LOGGED_ONLY';

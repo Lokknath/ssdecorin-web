@@ -48,8 +48,8 @@ return [
     'resend_from' => 'Sai Sreenivasa Decorin <noreply@ssdecorin.com>',
     'resend_sandbox_email' => 'jacketking.loknath@gmail.com',
 
-    // MilesWeb PHP mail() fallback enabled
-    'use_php_mail' => true,
+    // MilesWeb PHP mail() fallback (Disabled per user instruction - Resend only)
+    'use_php_mail' => false,
 
     // Storage path for lead vault
     'storage_dir' => __DIR__ . '/logs'
