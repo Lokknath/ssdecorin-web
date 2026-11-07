@@ -103,30 +103,112 @@ $cleanContact = stripHeaderInjection($contact);
 $replyToEmail = filter_var($cleanContact, FILTER_VALIDATE_EMAIL) ? $cleanContact : 'noreply@ssdecorin.com';
 
 // 5. Build HTML & Plaintext Email Body
-$cleanName = stripHeaderInjection($name);
-$cleanService = stripHeaderInjection($service);
-$subject = "New Enquiry: {$cleanService} — {$cleanName} (ssdecorin.com)";
+$cleanName     = stripHeaderInjection($name);
+$cleanCity     = stripHeaderInjection($city);
+$cleanService  = stripHeaderInjection($service);
+$cleanStage    = stripHeaderInjection($stage);
+$cleanTimeline = stripHeaderInjection($timeline);
+$subject       = "⚡ New Lead: {$cleanName} ({$cleanCity}) — {$cleanService} | ssdecorin.com";
 $dateFormatted = date('d M Y, h:i A') . ' IST';
+$clientIp      = cleanInput($_SERVER['REMOTE_ADDR'] ?? 'Unknown');
+
+// Generate Client Initials Monogram
+$nameParts = preg_split('/\s+/', trim($cleanName));
+$initials = '';
+if (!empty($nameParts[0])) {
+    $initials .= mb_substr($nameParts[0], 0, 1);
+}
+if (count($nameParts) > 1 && !empty($nameParts[count($nameParts) - 1])) {
+    $initials .= mb_substr($nameParts[count($nameParts) - 1], 0, 1);
+}
+$initials = strtoupper($initials ?: 'SSD');
+
+// Unique Lead Tracking Reference
+$leadRef = 'SSD-' . date('ymd') . '-' . strtoupper(substr(md5($cleanName . $contact . microtime()), 0, 4));
+
+// Contact Intelligence & Action Links
+$cleanDigits = preg_replace('/[^0-9]/', '', $contact);
+$hasPhone = (strlen($cleanDigits) >= 10);
+$waNum = '';
+if ($hasPhone) {
+    $waNum = (strlen($cleanDigits) === 10) ? ('91' . $cleanDigits) : $cleanDigits;
+}
+$isEmail = (bool)filter_var($cleanContact, FILTER_VALIDATE_EMAIL);
+
+$waGreeting = rawurlencode("Hello {$cleanName}, thank you for reaching out to Sai Sreenivasa Decorin regarding your {$cleanService} project. How can we assist you?");
+$waUrl = $hasPhone ? "https://wa.me/{$waNum}?text={$waGreeting}" : "";
+$telUrl = $hasPhone ? "tel:+{$waNum}" : "";
+$mailSubjectReply = rawurlencode("Sai Sreenivasa Decorin — Regarding your {$cleanService} enquiry");
+$mailUrl = $isEmail ? "mailto:{$cleanContact}?subject={$mailSubjectReply}" : "";
+
+// Action buttons HTML
+$actionButtonsHtml = '';
+if ($hasPhone) {
+    $actionButtonsHtml .= <<<HTML
+<a href="{$waUrl}" target="_blank" style="display:inline-block; background-color:#25D366; color:#ffffff; text-decoration:none; font-size:13px; font-weight:700; padding:10px 18px; border-radius:8px; margin-right:8px; margin-bottom:8px; box-shadow:0 4px 12px rgba(37,211,102,0.35);">
+  <span style="font-size:14px; vertical-align:middle; margin-right:4px;">💬</span> <span style="vertical-align:middle;">Reply on WhatsApp</span>
+</a>
+<a href="{$telUrl}" style="display:inline-block; background-color:#17243b; color:#f5d78a; border:1px solid rgba(212,176,106,0.5); text-decoration:none; font-size:13px; font-weight:700; padding:9px 16px; border-radius:8px; margin-right:8px; margin-bottom:8px;">
+  <span style="font-size:14px; vertical-align:middle; margin-right:4px;">📞</span> <span style="vertical-align:middle;">Call Client</span>
+</a>
+HTML;
+}
+
+if ($isEmail) {
+    $actionButtonsHtml .= <<<HTML
+<a href="{$mailUrl}" style="display:inline-block; background-color:#17243b; color:#93c5fd; border:1px solid rgba(59,130,246,0.5); text-decoration:none; font-size:13px; font-weight:700; padding:9px 16px; border-radius:8px; margin-right:8px; margin-bottom:8px;">
+  <span style="font-size:14px; vertical-align:middle; margin-right:4px;">✉️</span> <span style="vertical-align:middle;">Reply via Email</span>
+</a>
+HTML;
+}
+
+$actionButtonsHtml .= <<<HTML
+<a href="https://ssdecorin.com/leads" target="_blank" style="display:inline-block; background-color:#1e293b; color:#cbd5e1; border:1px solid rgba(255,255,255,0.15); text-decoration:none; font-size:13px; font-weight:600; padding:9px 16px; border-radius:8px; margin-bottom:8px;">
+  <span style="font-size:14px; vertical-align:middle; margin-right:4px;">🔐</span> <span style="vertical-align:middle;">Lead Vault</span>
+</a>
+HTML;
+
+// Formatted contact link
+if ($hasPhone && $isEmail) {
+    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#f5d78a; text-decoration:none;\">{$contact}</a>";
+} elseif ($isEmail) {
+    $contactFormatted = "<a href=\"mailto:{$cleanContact}\" style=\"color:#f5d78a; text-decoration:none;\">{$cleanContact}</a>";
+} elseif ($hasPhone) {
+    $contactFormatted = "<a href=\"tel:+{$waNum}\" style=\"color:#f5d78a; text-decoration:none;\">{$contact}</a>";
+} else {
+    $contactFormatted = htmlspecialchars($contact);
+}
 
 $plainBody = <<<TXT
-=====================================================
-  NEW ENQUIRY — SAI SREENIVASA DECORIN (ssdecorin.com)
-=====================================================
+======================================================================
+  ⚡ NEW CLIENT ENQUIRY — SAI SREENIVASA DECORIN (ssdecorin.com)
+  Lead Reference: {$leadRef}
+======================================================================
 
-Client Name:    {$name}
-Project City:   {$city}
-Contact:        {$contact}
-Service Needed: {$service}
-Project Stage:  {$stage}
-Timeline:       {$timeline}
-Submitted At:   {$dateFormatted}
+CLIENT SPOTLIGHT:
+----------------------------------------------------------------------
+Name:            {$name}
+City:            {$city}
+Contact:         {$contact}
+Service Needed:  {$service}
+Current Stage:   {$stage}
+Target Timeline: {$timeline}
+Submitted At:    {$dateFormatted}
 
-Project Scope & Details:
------------------------------------------------------
+DIRECT ACTIONS FOR ADMIN:
+----------------------------------------------------------------------
+WhatsApp Client: {$waUrl}
+Call Client:     tel:{$waNum}
+Lead Vault CRM:  https://ssdecorin.com/leads (Passcode: Decorin@2026)
+
+PROJECT SCOPE & CLIENT BRIEF:
+----------------------------------------------------------------------
 {$details}
 
-=====================================================
-Dispatched via ssdecorin.com official contact portal.
+======================================================================
+Security / Audit:
+IP: {$clientIp} | Engineering Standard: ±0.5mm CAD Precision
+Official notification dispatched via ssdecorin.com
 TXT;
 
 $htmlBody = <<<HTML
@@ -134,47 +216,194 @@ $htmlBody = <<<HTML
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>New Website Enquiry</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #080d17; color: #f3f0e9; margin: 0; padding: 24px; }
-    .card { max-width: 620px; margin: 0 auto; background: #0c1322; border: 1px solid rgba(212, 176, 106, 0.3); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.5); }
-    .header { background: linear-gradient(135deg, #111a2d, #080d17); padding: 24px; border-bottom: 2px solid #d4b06a; text-align: center; }
-    .header h1 { margin: 0; color: #f1e0b8; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
-    .header p { margin: 6px 0 0; color: #9aa3b5; font-size: 13px; }
-    .content { padding: 28px; }
-    .field-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
-    .field-table td { padding: 11px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 14px; vertical-align: top; }
-    .field-table td.label { width: 32%; color: #d4b06a; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
-    .field-table td.value { color: #f3f0e9; font-weight: 500; }
-    .details-box { background: rgba(255, 255, 255, 0.04); border-left: 3px solid #d4b06a; padding: 16px; border-radius: 6px; font-size: 14px; line-height: 1.6; color: #f3f0e9; white-space: pre-wrap; word-break: break-word; }
-    .footer { padding: 18px 24px; background: #080d17; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: #9aa3b5; text-align: center; }
-    .footer a { color: #d4b06a; text-decoration: none; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Project Enquiry — Sai Sreenivasa Decorin</title>
 </head>
-<body>
-  <div class="card">
-    <div class="header">
-      <h1>Sai Sreenivasa Decorin</h1>
-      <p>New Project Enquiry &middot; ssdecorin.com</p>
-    </div>
-    <div class="content">
-      <table class="field-table">
-        <tr><td class="label">Client Name</td><td class="value"><strong>{$name}</strong></td></tr>
-        <tr><td class="label">Project City</td><td class="value">{$city}</td></tr>
-        <tr><td class="label">Contact Info</td><td class="value"><a href="mailto:{$contact}" style="color:#d4b06a;">{$contact}</a></td></tr>
-        <tr><td class="label">Service Needed</td><td class="value"><strong>{$service}</strong></td></tr>
-        <tr><td class="label">Project Stage</td><td class="value">{$stage}</td></tr>
-        <tr><td class="label">Timeline</td><td class="value">{$timeline}</td></tr>
-        <tr><td class="label">Submitted At</td><td class="value">{$dateFormatted}</td></tr>
-      </table>
-      <p style="margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #d4b06a; font-weight: 600;">Project Scope / Details:</p>
-      <div class="details-box">{$details}</div>
-    </div>
-    <div class="footer">
-      Sent from the official website contact form on <a href="https://ssdecorin.com">ssdecorin.com</a>.
-      View all enquiries on the <a href="https://ssdecorin.com/leads">Lead Dashboard</a>.
-    </div>
+<body style="margin:0; padding:0; background-color:#050811; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased; color:#f1f5f9;">
+  <!-- Preheader preview text for inbox -->
+  <div style="display:none; max-height:0px; overflow:hidden; font-size:1px; line-height:1px; color:#050811; opacity:0; mso-hide:all;">
+    New enquiry from {$cleanName} ({$cleanCity}) for {$cleanService} &middot; Timeline: {$cleanTimeline}. 1-click WhatsApp &amp; Call actions inside.
   </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#050811; min-height:100vh; padding:28px 12px;">
+    <tr>
+      <td align="center" valign="top">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px; background-color:#0d1527; border:1px solid rgba(212, 176, 106, 0.4); border-radius:16px; overflow:hidden; box-shadow:0 20px 45px rgba(0,0,0,0.6);">
+          
+          <!-- Top Accent Gold Gradient Bar -->
+          <tr>
+            <td style="height:4px; background:linear-gradient(90deg, #9b722b 0%, #f5d78a 50%, #9b722b 100%); line-height:4px; font-size:4px;">&nbsp;</td>
+          </tr>
+
+          <!-- Header Section -->
+          <tr>
+            <td style="padding:24px 28px 20px 28px; background:linear-gradient(180deg, #131f38 0%, #0d1527 100%); border-bottom:1px solid rgba(212, 176, 106, 0.18);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="middle">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="width:44px; height:44px; background:linear-gradient(135deg, #d4b06a 0%, #8c6721 100%); border-radius:10px; text-align:center; vertical-align:middle; font-family:Georgia, serif; font-size:17px; font-weight:bold; color:#080d17; letter-spacing:0.05em; box-shadow:0 4px 12px rgba(212, 176, 106, 0.25);">
+                          SSD
+                        </td>
+                        <td style="padding-left:14px; vertical-align:middle;">
+                          <div style="font-size:15px; font-weight:800; letter-spacing:0.12em; color:#f5d78a; text-transform:uppercase;">SAI SREENIVASA DECORIN</div>
+                          <div style="font-size:11px; color:#94a3b8; letter-spacing:0.04em; margin-top:3px;">Interior Architecture &middot; Modular Engineering &middot; Quality Audits</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" valign="middle">
+                    <span style="display:inline-block; background-color:rgba(34, 197, 94, 0.12); border:1px solid rgba(34, 197, 94, 0.4); color:#4ade80; font-size:11px; font-weight:700; padding:5px 12px; border-radius:999px; letter-spacing:0.05em; text-transform:uppercase; white-space:nowrap;">
+                      &#x25CF; NEW LEAD
+                    </span>
+                    <div style="font-size:10px; color:#64748b; font-family:monospace; margin-top:4px; text-align:right;">{$leadRef}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Client Spotlight Hero Block -->
+          <tr>
+            <td style="padding:24px 28px 16px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, #15223c 0%, #101a2e 100%); border:1px solid rgba(212, 176, 106, 0.35); border-radius:12px; padding:20px;">
+                <tr>
+                  <td>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="width:52px; vertical-align:top;">
+                          <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #d4b06a 0%, #9a6d23 100%); color:#080d17; text-align:center; line-height:48px; font-size:19px; font-weight:800; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow:0 4px 14px rgba(0,0,0,0.35);">
+                            {$initials}
+                          </div>
+                        </td>
+                        <td style="padding-left:14px; vertical-align:top;">
+                          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:2px;">Enquiring Client</div>
+                          <h2 style="margin:0 0 6px 0; font-size:22px; font-weight:700; color:#ffffff; letter-spacing:-0.01em; line-height:1.2;">{$name}</h2>
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="font-size:13px; color:#cbd5e1;">
+                                <span style="display:inline-block; margin-right:12px;">&#x1F4CD; <strong style="color:#f1f5f9;">{$city}</strong></span>
+                                <span style="display:inline-block; background-color:rgba(212, 176, 106, 0.15); border:1px solid rgba(212, 176, 106, 0.4); color:#f5d78a; font-size:11px; font-weight:600; padding:2px 10px; border-radius:999px;">
+                                  {$service}
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Instant CTA Action Bar -->
+                    <div style="margin-top:18px; padding-top:16px; border-top:1px solid rgba(255, 255, 255, 0.08);">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td>
+                            {$actionButtonsHtml}
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Key Specifications Grid (2 Columns) -->
+          <tr>
+            <td style="padding:0 28px 20px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate; border-spacing:10px 10px; margin:-5px -5px;">
+                <tr>
+                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Service Requested</div>
+                    <div style="font-size:14px; color:#ffffff; font-weight:700;">{$service}</div>
+                  </td>
+                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Project City</div>
+                    <div style="font-size:14px; color:#ffffff; font-weight:700;">{$city}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Project Stage</div>
+                    <div style="font-size:14px; color:#ffffff; font-weight:600;">{$stage}</div>
+                  </td>
+                  <td width="50%" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Target Timeline</div>
+                    <div style="font-size:14px; color:#ffffff; font-weight:600;">{$timeline}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="background-color:#121c32; border:1px solid rgba(255, 255, 255, 0.08); border-radius:10px; padding:14px 16px; vertical-align:top;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:4px;">Contact Detail</div>
+                    <div style="font-size:15px; color:#f5d78a; font-weight:700; font-family:monospace;">{$contactFormatted}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Project Scope & Client Brief -->
+          <tr>
+            <td style="padding:0 28px 24px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0b1220; border-left:4px solid #d4b06a; border-radius:0 10px 10px 0; border-top:1px solid rgba(255,255,255,0.06); border-right:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06);">
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#d4b06a; font-weight:700; margin-bottom:8px;">
+                      &#x1F4D0; Project Scope &amp; Client Brief
+                    </div>
+                    <div style="font-size:14px; line-height:1.65; color:#f1f5f9; white-space:pre-wrap; word-break:break-word;">{$details}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Lead Vault Access Banner -->
+          <tr>
+            <td style="padding:0 28px 24px 28px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg, rgba(212, 176, 106, 0.12) 0%, rgba(212, 176, 106, 0.04) 100%); border:1px dashed rgba(212, 176, 106, 0.4); border-radius:10px; padding:14px 18px;">
+                <tr>
+                  <td valign="middle">
+                    <div style="font-size:13px; font-weight:700; color:#f5d78a;">Live Lead Vault Dashboard</div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:2px;">Securely backed up in JSON vault &middot; Passcode: <code style="color:#f1f5f9; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px; font-family:monospace;">Decorin@2026</code></div>
+                  </td>
+                  <td align="right" valign="middle">
+                    <a href="https://ssdecorin.com/leads" target="_blank" style="display:inline-block; background-color:#d4b06a; color:#080d17; text-decoration:none; font-size:12px; font-weight:800; padding:9px 16px; border-radius:6px; letter-spacing:0.03em; white-space:nowrap;">
+                      Open Vault &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer & Technical Audit -->
+          <tr>
+            <td style="padding:20px 28px; background-color:#080d18; border-top:1px solid rgba(255, 255, 255, 0.06); text-align:center;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="font-size:12px; color:#94a3b8; line-height:1.6; text-align:center;">
+                    <span style="color:#cbd5e1; font-weight:600;">Sai Sreenivasa Decorin</span> &middot; Managing Partner: <strong style="color:#f5d78a;">S. S. Naga Nandan</strong><br>
+                    <span>Direct: <a href="tel:+916363313546" style="color:#d4b06a; text-decoration:none;">+91 63633 13546</a></span> &middot;
+                    <span>Website: <a href="https://ssdecorin.com" style="color:#d4b06a; text-decoration:none;">ssdecorin.com</a></span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top:12px; font-size:11px; color:#64748b; line-height:1.5; font-family:monospace; text-align:center;">
+                    Submitted: {$dateFormatted} &middot; IP: {$clientIp}<br>
+                    Engineering Standard: &plusmn;0.5mm CAD Precision &middot; Interio Check&trade; Verified
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 HTML;
@@ -226,14 +455,15 @@ if (!empty($resendKey)) {
     $resendFrom = $config['resend_from'] ?? 'Sai Sreenivasa Decorin <onboarding@resend.dev>';
     $sandboxEmail = $config['resend_sandbox_email'] ?? '';
     
-    $sendResend = function(string $to) use ($resendKey, $resendFrom, $replyToEmail, $subject, $htmlBody): array {
+    $sendResend = function(string $to) use ($resendKey, $resendFrom, $replyToEmail, $subject, $htmlBody, $plainBody): array {
         $ch = curl_init('https://api.resend.com/emails');
         $payload = json_encode([
             'from' => $resendFrom,
             'to' => [$to],
             'reply_to' => $replyToEmail,
             'subject' => $subject,
-            'html' => $htmlBody
+            'html' => $htmlBody,
+            'text' => $plainBody
         ]);
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
