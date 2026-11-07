@@ -1033,7 +1033,7 @@ form.addEventListener('submit', async (event) => {
   submitBtn.classList.add('is-loading'); submitBtn.disabled = true; label.textContent = 'Sending…';
   try {
     const res = await sendEnquiry(data);
-    $('[data-success-copy]').textContent = `Thank you, ${String(data.get('name')).split(' ')[0]} — your enquiry has been sent to our technical team (${res?.recipient || 'loknath.surabhi@gmail.com'}). We will review your project and reply to ${data.get('contact')} shortly.`;
+    $('[data-success-copy]').textContent = `Thank you, ${String(data.get('name')).split(' ')[0]} — your enquiry has been received. Our team will review your project and reply shortly.`;
     const waBtn = $('[data-success-wa]');
     if (waBtn) {
       waBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lastBrief)}`;

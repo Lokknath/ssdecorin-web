@@ -617,8 +617,6 @@ html:not(.js) .preloader { display: none; }
 .success-ring { width: 5rem; height: 5rem; border-radius: 50%; display: grid; place-items: center; color: #1b1306; background: linear-gradient(135deg, var(--brass-2), var(--brass-d)); font-size: 2rem; animation: pop 0.8s var(--spring); box-shadow: 0 0 0 10px rgba(212, 176, 106, 0.12), 0 0 60px rgba(212, 176, 106, 0.4); }
 .success-ring .ico { stroke-width: 2.6; }
 @keyframes pop { from { transform: scale(0) rotate(-40deg); } }
-.success-alert { max-width: 50ch; margin: 0.5rem 0; padding: 0.9rem 1.2rem; border-radius: 14px; background: rgba(212, 176, 106, 0.12); border: 1px solid rgba(212, 176, 106, 0.35); font-size: 0.88rem; line-height: 1.5; color: var(--ink); text-align: left; }
-.success-alert strong { color: var(--brass-2); }
 .success-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
 
 /* ---------- Footer ---------- */

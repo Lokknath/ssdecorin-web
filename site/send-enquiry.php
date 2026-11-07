@@ -175,15 +175,11 @@ $msgId = "<" . time() . "." . bin2hex(random_bytes(8)) . "@ssdecorin.com>";
 $headers = [
     'MIME-Version: 1.0',
     'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
-    'From: Sai Sreenivasa Decorin <noreply@ssdecorin.com>',
+    'From: "Sai Sreenivasa Decorin" <noreply@ssdecorin.com>',
     "Reply-To: {$replyToEmail}",
-    'Return-Path: <noreply@ssdecorin.com>',
     'Message-ID: ' . $msgId,
     'Date: ' . date('r'),
-    'X-Mailer: PHP/' . phpversion(),
-    'X-Auto-Response-Suppress: All',
-    'Auto-Submitted: auto-generated',
-    'Precedence: bulk'
+    'X-Mailer: PHP/' . phpversion()
 ];
 
 $emailContent = "--{$boundary}\r\n" .
