@@ -113,23 +113,20 @@ const auditEl = $('[data-preload-audit]');
 const coordsEl = $('[data-pre-coords]');
 
 function finishLoad() {
-  if (root.classList.contains('is-leaving')) return;
-  root.classList.add('is-leaving'); // the two doors part…
-  setTimeout(() => root.classList.add('is-loaded'), reduced.matches ? 0 : 750); // …then the hero choreography starts
-  setTimeout(() => document.dispatchEvent(new Event('decorin:loaded')), reduced.matches ? 0 : 1900);
-  setTimeout(() => $('.preloader')?.remove(), reduced.matches ? 50 : 2200); // stop its animations for good once it is hidden
+  if (root.classList.contains('is-loaded')) return;
+  root.classList.add('is-leaving');
+  root.classList.add('is-loaded');
+  document.dispatchEvent(new Event('decorin:loaded'));
+  setTimeout(() => $('.preloader')?.remove(), 350);
 }
 
 (function preload() {
   const isMobile = window.innerWidth <= 640;
-  const duration = reduced.matches ? 1 : (isMobile ? 3200 : 5400); // brisk on mobile, extended CAD drafting on desktop
+  const duration = reduced.matches ? 1 : (isMobile ? 750 : 1100); // Snappy, crisp luxury calibration
   const start = performance.now();
-  const ready = Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 2600))]);
-  let fontsReady = false; ready.then(() => { fontsReady = true; });
   const pre = $('.preloader'), statusEl = $('[data-preload-status]');
   if (location.search.includes('skip_preload')) {
-    root.classList.add('is-loaded');
-    $('.preloader')?.remove();
+    finishLoad();
     return;
   }
   const steps = [
@@ -168,12 +165,18 @@ function finishLoad() {
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      setTimeout(finishLoad, reduced.matches ? 0 : 500);
+      setTimeout(finishLoad, 60);
     }
   };
   requestAnimationFrame(tick);
+
+  // Instant dismissal on any user action so the visitor is never blocked
   pre?.addEventListener('click', finishLoad, { once: true });
-  setTimeout(finishLoad, 6000);
+  window.addEventListener('wheel', finishLoad, { once: true, passive: true });
+  window.addEventListener('touchmove', finishLoad, { once: true, passive: true });
+  window.addEventListener('scroll', finishLoad, { once: true, passive: true });
+  window.addEventListener('keydown', finishLoad, { once: true, passive: true });
+  setTimeout(finishLoad, 1400); // Fail-safe limit: never stall
 })();
 
 /* ---- Scroll: progress, ruler, rail, header state, ambient shift, process timeline ---- */
@@ -227,14 +230,14 @@ addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimat
 addEventListener('resize', updateProcess, { passive: true });
 onScroll();
 
-/* ---- Reveal on scroll ---- */
+/* ---- Reveal on scroll: Early anticipation so content is already visible when scrolled to ---- */
 const io = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (!entry.isIntersecting) return;
     entry.target.classList.add('is-visible');
     io.unobserve(entry.target);
   });
-}, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+}, { threshold: 0.01, rootMargin: '300px 0px 150px 0px' });
 $$('.reveal').forEach((el, i) => { el.style.setProperty('--i', i % 4); io.observe(el); });
 $$('[data-split]').forEach((el) => { if (!el.closest('.hero')) io.observe(el); });
 

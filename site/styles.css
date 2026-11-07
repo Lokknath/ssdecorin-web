@@ -288,15 +288,15 @@ html.has-modal button, html.has-modal a, html.has-modal summary, html.has-modal 
 .preloader-audit { font-size: 0.76rem; color: rgba(241, 224, 184, 0.7); font-family: var(--mono, monospace); }
 html:not(.js) .preloader { display: none; }
 
-/* ---------- Reveal system ---------- */
-.js .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); transition-delay: calc(var(--i, 0) * 70ms); }
+/* ---------- Reveal system (snappy & anticipated) ---------- */
+.js .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i, 0) * 35ms); }
 .js .reveal.is-visible { opacity: 1; transform: none; }
-.js .reveal-up { opacity: 0; transform: translateY(26px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); transition-delay: calc(var(--d, 0) * 90ms + 0.2s); }
+.js .reveal-up { opacity: 0; transform: translateY(16px); transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--d, 0) * 40ms + 0.05s); }
 .is-loaded .reveal-up { opacity: 1; transform: none; }
 .w { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 0.06em 0.14em 0; margin-bottom: -0.14em; }
 .w > span { display: inline-block; }
-.js [data-split] .w > span { transform: translateY(112%); transition: transform 1s var(--ease); transition-delay: calc(var(--wi, 0) * 50ms + 300ms); }
-.js.is-loaded [data-split] .w > span { transform: none; }
+.js [data-split] .w > span { transform: translateY(112%); transition: transform 0.5s var(--ease); transition-delay: calc(var(--wi, 0) * 25ms + 50ms); }
+.js.is-loaded [data-split] .w > span, .js [data-split].is-visible .w > span { transform: none; }
 
 /* ---------- Buttons ---------- */
 .btn { --h: 3.2rem; position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; height: var(--h); padding: 0 1.55rem; border-radius: 999px; font-weight: 700; font-size: 0.98rem; white-space: nowrap; overflow: hidden; isolation: isolate; transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease), background 0.3s, border-color 0.3s; }
@@ -408,7 +408,6 @@ html:not(.js) .preloader { display: none; }
 /* hero stage: a drafting room that draws itself, with the portrait scanned into it */
 .hero-stage { position: relative; perspective: 1400px; width: 100%; max-width: min(560px, calc((100svh - 8.5rem) * 0.88)); justify-self: end; aspect-ratio: 560 / 640; --rx: 0deg; --ry: 0deg; }
 .hero-stage > * { translate: var(--depth-x, 0px) calc(var(--depth-y, 0px) + var(--sc-y, 0px)); transition: translate 0.7s var(--ease), transform 0.5s var(--ease); }
-.js:not(.is-loaded) .hero-stage > * { visibility: hidden; }
 @keyframes lightSweep { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 @keyframes glowPulse { 50% { transform: scale(1.1); opacity: 0.75; } }
 
@@ -438,8 +437,36 @@ html:not(.js) .preloader { display: none; }
 .portrait-pulse { position: absolute; width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--brass); pointer-events: none; z-index: 10; animation: portraitPulse 0.7s var(--ease) forwards; }
 @keyframes portraitPulse { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; } }
 
-.hero-portrait { display: block; width: 100%; height: auto; -webkit-clip-path: none; clip-path: none; }
-.hero-portrait.photo { filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5)); position: relative; z-index: 1; -webkit-clip-path: none; clip-path: none; }
+.hero-portrait { display: block; width: 100%; height: auto; }
+.hero-portrait.photo {
+  filter: drop-shadow(0 22px 26px rgba(5, 8, 16, 0.5));
+  position: relative;
+  z-index: 1;
+  opacity: 1 !important;
+  visibility: visible !important;
+  -webkit-clip-path: none !important;
+  clip-path: none !important;
+}
+.hero-portrait.bp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+.scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent calc(100% - 60px), rgba(241, 224, 184, 0.75) calc(100% - 2px), #fff calc(100% - 1px), transparent 100%);
+  transform: translateX(-100%);
+}
 .lens-wrap, .lens-ring { display: none !important; }
 
 /* orbiting service circles — they sit behind the portrait */
@@ -479,29 +506,27 @@ html:not(.js) .preloader { display: none; }
 .stage-name strong { display: block; font-size: 1.05rem; line-height: 1.3; }
 .stage-name small { color: var(--brass-2); font-size: 0.85rem; font-weight: 700; }
 
-/* hero entrance choreography — starts when the preloader doors have parted */
-.is-loaded .room .dr { animation: draw 1.5s var(--ease-io) calc(0.1s + var(--n, 0) * 0.16s) backwards; }
-.is-loaded .room .r-fill { animation: fadeIn 2s ease 1s backwards; }
-.is-loaded .halo-glow { animation: fadeIn 2s ease 1s backwards, glowPulse 7s ease-in-out 3s infinite; }
-.is-loaded .dim-label { animation: dimCount 1.8s var(--ease) 1.9s both, fadeIn 0.6s ease 1.8s backwards; }
-.is-loaded .pendant { animation: lampOn 2.4s linear 2.3s backwards, glowPulse 8s ease-in-out 4.7s infinite; }
+/* hero entrance choreography — swift, cohesive & architectural */
+.is-loaded .room .dr { animation: draw 0.9s var(--ease-io) calc(0.04s + var(--n, 0) * 0.06s) backwards; }
+.is-loaded .room .r-fill { animation: fadeIn 0.8s ease 0.25s backwards; }
+.is-loaded .halo-glow { animation: fadeIn 0.8s ease 0.25s backwards, glowPulse 7s ease-in-out 1.2s infinite; }
+.is-loaded .dim-label { animation: dimCount 1.0s var(--ease) 0.35s both, fadeIn 0.3s ease 0.35s backwards; }
+.is-loaded .pendant { animation: lampOn 1.2s linear 0.35s backwards, glowPulse 8s ease-in-out 2s infinite; }
 @keyframes lampOn { 0% { opacity: 0; } 8% { opacity: 0.55; } 13% { opacity: 0.05; } 24% { opacity: 0.8; } 30% { opacity: 0.15; } 46% { opacity: 1; } 100% { opacity: 1; } }
-.is-loaded .hero-portrait.photo { animation: photoIn 1.45s var(--ease-io) 1.35s both; }
-.is-loaded .hero-portrait.bp { animation: bpIn 2.8s var(--ease-io) 0.75s both; }
-.is-loaded .scan { animation: scanX 1.45s var(--ease-io) 0.75s both; }
-@keyframes photoIn { from { -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); } to { -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } }
+.is-loaded .hero-portrait.bp { animation: bpIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.is-loaded .scan { animation: scanX 1.05s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
 @keyframes bpIn { 
-  0% { opacity: 0.95; -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); } 
-  45% { opacity: 0.95; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
-  70% { opacity: 0.95; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
-  100% { opacity: 0.38; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+  0% { opacity: 0; -webkit-clip-path: inset(0 100% 0 0); clip-path: inset(0 100% 0 0); } 
+  30% { opacity: 0.95; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+  70% { opacity: 0.6; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
+  100% { opacity: 0.22; -webkit-clip-path: inset(0 0 0 0); clip-path: inset(0 0 0 0); } 
 }
-@keyframes scanX { 0% { opacity: 1; transform: translateX(-100%); } 92% { opacity: 1; } 100% { opacity: 0; transform: translateX(0); } }
-.is-loaded .orb { animation: orbOut 1.4s var(--ease) calc(2.6s + var(--i) * 0.12s) backwards; }
-.is-loaded .stage-name { animation: riseIn 0.9s var(--ease) 2.5s backwards; }
-.is-loaded .card-where { animation: riseIn 1s var(--ease) 2.7s backwards, bob 9s ease-in-out 3.7s infinite; }
-.is-loaded .card-price { animation: riseIn 1s var(--ease) 2.9s backwards, bob 8s ease-in-out 3.9s infinite; }
-.is-loaded .card-audit { animation: riseIn 1s var(--ease) 3.1s backwards, bob 10s ease-in-out 4.1s infinite; }
+@keyframes scanX { 0% { opacity: 1; transform: translateX(-100%); } 92% { opacity: 1; } 100% { opacity: 0; transform: translateX(100%); } }
+.is-loaded .orb { animation: orbOut 0.8s var(--ease) calc(0.35s + var(--i) * 0.05s) backwards; }
+.is-loaded .stage-name { animation: riseIn 0.6s var(--ease) 0.5s backwards; }
+.is-loaded .card-where { animation: riseIn 0.6s var(--ease) 0.45s backwards, bob 9s ease-in-out 1.2s infinite; }
+.is-loaded .card-price { animation: riseIn 0.6s var(--ease) 0.55s backwards, bob 8s ease-in-out 1.4s infinite; }
+.is-loaded .card-audit { animation: riseIn 0.6s var(--ease) 0.65s backwards, bob 10s ease-in-out 1.6s infinite; }
 @keyframes draw { from { stroke-dashoffset: 1; } }
 @keyframes riseIn { from { opacity: 0; transform: translateY(26px); } }
 @keyframes bob { 50% { transform: translateY(-9px); } }
