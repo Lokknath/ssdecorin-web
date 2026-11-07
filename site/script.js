@@ -26,9 +26,9 @@ HTMLDialogElement.prototype.showModal = function showModal() {
 /* ---- Service content (shown in the detail dialog) ---- */
 const SERVICES = {
   consulting: {
-    name: 'Homeowner Consultant', icon: 'i-user',
-    summary: 'Dedicated independent technical advisor for homeowners. We protect your budget, review contractor estimates, inspect site execution, and track snags — working 100% on your side from start to finish.',
-    audience: 'Homeowners planning a new interior or currently running an interior project',
+    name: 'Home Owner Consultant', icon: 'i-user',
+    summary: 'Dedicated independent technical advisor for home owners. We protect your budget, review contractor estimates, inspect site execution, and track snags — working 100% on your side from start to finish.',
+    audience: 'Home owners planning a new interior or currently running an interior project',
     scope: ['Budget planning, quote comparison, and BOQ rate validation', 'Technical drawing verification and material specification advice', 'Vendor negotiation support and execution milestone tracking', 'Independent on-site inspections, snag lists, and final handover signoff'],
     deliver: ['Comprehensive advisory roadmap and written review notes', 'Quote comparison matrix and material verification reports', 'Milestone inspection audits and final snag-free handover certificate'],
     share: ['Your name, contact details, and property location', 'Property type, approximate carpet area, and indicative budget', 'Current project stage and planned start/completion dates', 'Whether contractors or designers are already shortlisted or hired'],
@@ -36,8 +36,8 @@ const SERVICES = {
   },
   measurement: {
     name: 'Site Measurement', icon: 'i-ruler',
-    summary: 'Laser-accurate site measurement for homeowners, interior designers, and contractors — providing a verified, millimeter-accurate base for design, CAD drawings, and carpentry.',
-    audience: 'Homeowners, interior designers, contractors, modular furniture businesses',
+    summary: 'Laser-accurate site measurement for home owners, interior designers, and contractors — providing a verified, millimeter-accurate base for design, CAD drawings, and carpentry.',
+    audience: 'Home owners, interior designers, contractors, modular furniture businesses',
     scope: ['Room-by-room dimensions, door and window positions, wall squareness', 'Ceiling heights, beam drops, and accurate area calculations', 'High-resolution site photographs with key observation notes'],
     deliver: ['Detailed room-by-room measurement report', 'Editable Excel area-calculation sheet with built-in formulas', 'Consolidated PDF report ready for designers and architects'],
     share: ['Your name and mobile number', 'Site address / city location', 'Property type (flat, villa, office) and approx built-up area', 'Preferred site visit date and access details'],
@@ -45,8 +45,8 @@ const SERVICES = {
   },
   check: {
     name: 'Interio Check', icon: 'i-check-list',
-    summary: 'Independent 48-point technical inspection for homeowners and businesses. We verify contractor quotations, inspect delivered materials, and audit workmanship before you release payments.',
-    audience: 'Homeowners and businesses with planned, ongoing, or ready-for-handover interiors',
+    summary: 'Independent 48-point technical inspection for home owners and businesses. We verify contractor quotations, inspect delivered materials, and audit workmanship before you release payments.',
+    audience: 'Home owners and businesses with planned, ongoing, or ready-for-handover interiors',
     scope: ['Quotation and BOQ rate analysis against real market standards', 'Plywood grade, laminate brand, and hardware specification verification', 'Workmanship, joint alignment, edge-banding, and finish audit', 'Comprehensive snag identification and rectification checklist'],
     deliver: ['Independent technical inspection report', 'Detailed findings with annotated photographic evidence', 'Actionable snag list with priority rectification guidelines'],
     share: ['Name, contact number, and site city', 'Project type, stage (quotation, execution, handover), and area', 'Specific inspection concern or decision needed', 'Copy of contractor quote / BOQ and preferred audit date'],
@@ -55,7 +55,7 @@ const SERVICES = {
   drafting: {
     name: 'Modular Drafting', icon: 'i-compass',
     summary: 'Production-ready 2D layouts and construction drawings for kitchens, wardrobes, and TV units — dimensioned with hardware clearances and cutting lists a factory can build from directly.',
-    audience: 'Interior designers, contractors, modular furniture makers, homeowners',
+    audience: 'Interior designers, contractors, modular furniture makers, home owners',
     scope: ['Dimensioned 2D plans, elevations, and detailed cross-sections', 'Hardware positioning, hinge clearances, and material specifications', 'Panel cutting lists and Bill of Materials (BOM) coordination'],
     deliver: ['CAD (DWG) and PDF technical drawings ready for production', 'Bill of Materials (BOM) and panel optimization cutting lists', 'Hardware schedule and installation detailing guidelines'],
     share: ['Name / studio name and contact details', 'Furniture category (kitchen, wardrobe, etc.) and number of units', 'Rough room dimensions or design references / 3D renders', 'Required drawing output format and target deadline'],
@@ -73,14 +73,14 @@ const SERVICES = {
   vendors: {
     name: 'Vendor Directory', icon: 'i-pin',
     summary: 'Curated directory of verified suppliers, modular factories, hardware dealers, and skilled trades across Hyderabad and Bengaluru — helping you source materials and labor with complete confidence.',
-    audience: 'Homeowners, interior designers, contractors, furniture businesses',
+    audience: 'Home owners, interior designers, contractors, furniture businesses',
     scope: ['Plywood, laminate, veneer, acrylic, glass, and profile suppliers', 'Modular cabinetry factories and OEM carcass fabricators', 'Skilled finishing trades: experienced carpenters, painters, and electricians', 'Categorized search by material type, grade, and city location'],
     deliver: ['Direct verified vendor contact listings according to selected package', 'Material sourcing coordination and manufacturer introductions'],
     share: ['Your name, contact number, and city', 'Vendor or material category needed (plywood, hardware, modular, labor)', 'Approximate project volume or requirement', 'Target procurement timeline'],
     price: { main: 'Priced per access package', note: 'Packages organized by trade category and city' }
   }
 };
-const SERVICE_SELECT_VALUE = { measurement: 'Site Measurement', check: 'Interio Check', drafting: 'Modular Drafting', training: 'Interior Training', vendors: 'Vendor Directory', consulting: 'Homeowner Consultant' };
+const SERVICE_SELECT_VALUE = { measurement: 'Site Measurement', check: 'Interio Check', drafting: 'Modular Drafting', training: 'Interior Training', vendors: 'Vendor Directory', consulting: 'Home Owner Consultant' };
 const waLink = (service) => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(service ? `Hello Sai Sreenivasa Decorin, I'd like to enquire about ${service}.` : "Hello Sai Sreenivasa Decorin, I'd like to discuss an interior project.")}`;
 
 /* ---- Split headings into masked words ---- */
@@ -693,7 +693,7 @@ const SERVICE_PHOTO = {
   drafting: ['photo-1580982330720-bd5e0fed108b', 'CAD model of a shelving unit on a monitor beside printed drawings'],
   training: ['photo-1664638413509-6aa486866f9a', 'Learners comparing material samples at a workshop table'],
   vendors: ['photo-1667400104764-a5fd01a919b0', 'Hand holding a fan of finish and laminate samples'],
-  consulting: ['photo-1692167457893-2c8ca89392ff', 'Homeowners reviewing plans inside a timber-framed home under construction']
+  consulting: ['photo-1692167457893-2c8ca89392ff', 'Home owners reviewing plans inside a timber-framed home under construction']
 };
 const serviceKeys = Object.keys(SERVICES);
 const smTabs = $('[data-sm-tabs]');
@@ -915,20 +915,20 @@ const RULES = {
   name: (v) => {
     const val = v.trim();
     if (!val) return 'Please enter your name.';
-    if (val.length < 2) return 'Name must be at least 2 characters.';
-    if (/[<>{}\[\]\\]/.test(val)) return 'Please enter a valid name without script or bracket characters.';
+    if (val.length < 2) return 'Please enter a name with at least 2 characters.';
+    if (/[<>{}\[\]\\]/.test(val)) return 'Please enter a valid name without special characters.';
     return '';
   },
-  city: (v) => (v.length >= 2 && /\p{L}{2}/u.test(v) ? '' : 'Enter the city where the project is.'),
+  city: (v) => (v.length >= 2 && /\p{L}{2}/u.test(v) ? '' : 'Please enter your project city.'),
   contact: (v) => {
-    if (!v) return 'Enter a mobile number or an email address.';
+    if (!v) return 'Please enter a mobile number or email address.';
     if (parseContact(v)) return '';
     return /[A-Za-z@]/.test(v)
-      ? 'That email looks incomplete — use the form name@example.com.'
-      : 'Enter a valid 10-digit mobile number (starting 6–9), or an email address.';
+      ? 'That email looks incomplete — please use the format name@example.com.'
+      : 'Please enter a valid 10-digit mobile number (starting with 6–9), or an email address.';
   },
-  service: (v) => (v ? '' : 'Choose the service you need.'),
-  details: (v) => (v.length >= 10 ? '' : 'Add a few words about the project (at least 10 characters).')
+  service: (v) => (v ? '' : 'Please select the service you need.'),
+  details: (v) => (v.length >= 10 ? '' : 'Please provide a brief description of your project (at least 10 characters).')
 };
 const fields = Object.keys(RULES).map((n) => {
   const input = $(`[name="${n}"]`, form), field = input.closest('.field');
@@ -1011,7 +1011,7 @@ form.addEventListener('submit', async (event) => {
   const problems = fields.filter((f) => check(f));
   if (problems.length) {
     problems[0].input.focus();
-    showError(problems.length === 1 ? 'One field needs attention — see below.' : `${problems.length} fields need attention — they are marked below.`);
+    showError(problems.length === 1 ? 'Please check the highlighted field below.' : `Please check the ${problems.length} highlighted fields below.`);
     return;
   }
   const contact = parseContact($('[name="contact"]', form).value);

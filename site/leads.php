@@ -837,7 +837,8 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
           <option value="Modular Drafting">Modular Drafting</option>
           <option value="Interior Training">Interior Training</option>
           <option value="Vendor Directory">Vendor Directory</option>
-          <option value="Homeowner Consultant">Homeowner Consultant</option>
+          <option value="Home Owner Consultant">Home Owner Consultant</option>
+          <option value="Homeowner Consultant">Homeowner Consultant (Legacy)</option>
           <option value="General Enquiry">General Enquiry</option>
         </select>
       </div>
@@ -1120,7 +1121,8 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
               <option value="Modular Drafting">Modular Drafting</option>
               <option value="Interior Training">Interior Training</option>
               <option value="Vendor Directory">Vendor Directory</option>
-              <option value="Homeowner Consultant">Homeowner Consultant</option>
+              <option value="Home Owner Consultant">Home Owner Consultant</option>
+          <option value="Homeowner Consultant">Homeowner Consultant (Legacy)</option>
               <option value="General Enquiry">General Enquiry</option>
             </select>
           </div>
