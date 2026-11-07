@@ -861,9 +861,110 @@ html:not(.js) .preloader { display: none; }
 
 /* ---------- About ---------- */
 .about-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: clamp(2rem, 6vw, 6rem); align-items: center; }
-.about-visual { perspective: 1000px; --rx: 0deg; --ry: 0deg; }
-.about-frame { position: relative; aspect-ratio: 1 / 1.08; border-radius: 36px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(100% 80% at 50% 20%, rgba(236, 229, 212, 0.9), rgba(111, 143, 185, 0.7) 55%, rgba(14, 22, 40, 0.95) 100%); transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform 0.5s var(--ease); }
-.about-frame img { width: 106%; max-width: none; transform: translateY(4%); filter: drop-shadow(0 24px 30px rgba(5, 8, 16, 0.45)); }
+/* ---- About Founder Visual Frame & Background Effects ---- */
+.about-visual {
+  perspective: 1000px;
+  --rx: 0deg;
+  --ry: 0deg;
+}
+
+.about-frame {
+  position: relative;
+  aspect-ratio: 1 / 1.08;
+  border-radius: 36px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 85% 70% at 50% 28%, rgba(212, 176, 106, 0.35), transparent 72%),
+    radial-gradient(circle 280px at 50% 30%, rgba(42, 141, 110, 0.48), transparent 70%),
+    linear-gradient(180deg, #0e1e20 0%, #081318 55%, #050b0f 100%);
+  border: 1px solid rgba(212, 176, 106, 0.38);
+  box-shadow:
+    0 24px 60px -12px rgba(0, 0, 0, 0.85),
+    0 0 50px -10px rgba(42, 141, 110, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 40px rgba(212, 176, 106, 0.08);
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease), border-color 0.4s var(--ease);
+}
+
+.about-frame:hover {
+  border-color: rgba(212, 176, 106, 0.65);
+  box-shadow:
+    0 32px 75px -12px rgba(0, 0, 0, 0.9),
+    0 0 65px -8px rgba(212, 176, 106, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 45px rgba(212, 176, 106, 0.15);
+}
+
+/* Subtle Architectural Blueprint Grid Pattern */
+.about-grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(212, 176, 106, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212, 176, 106, 0.07) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-position: center center;
+  -webkit-mask-image: radial-gradient(circle at 50% 32%, #000 35%, transparent 85%);
+  mask-image: radial-gradient(circle at 50% 32%, #000 35%, transparent 85%);
+  opacity: 0.8;
+}
+
+/* Living Breathing Warm Backlight Aura behind the founder */
+.about-aura {
+  position: absolute;
+  width: 74%;
+  aspect-ratio: 1;
+  top: 5%;
+  left: 13%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(241, 224, 184, 0.4) 0%, rgba(212, 176, 106, 0.24) 40%, rgba(42, 141, 110, 0.18) 65%, transparent 80%);
+  filter: blur(28px);
+  pointer-events: none;
+  animation: aboutAuraBreathe 6.5s ease-in-out infinite alternate;
+}
+@keyframes aboutAuraBreathe {
+  0% { transform: scale(0.92); opacity: 0.72; }
+  100% { transform: scale(1.08); opacity: 1; filter: blur(34px); }
+}
+
+.about-frame img {
+  position: relative;
+  z-index: 2;
+  width: 106%;
+  max-width: none;
+  transform: translateY(4%);
+  filter: drop-shadow(0 26px 36px rgba(5, 8, 16, 0.7)) drop-shadow(0 0 20px rgba(212, 176, 106, 0.15));
+  transition: transform 0.6s var(--ease), filter 0.6s var(--ease);
+}
+.about-frame:hover img {
+  transform: translateY(2%) scale(1.02);
+  filter: drop-shadow(0 32px 48px rgba(5, 8, 16, 0.85)) drop-shadow(0 0 28px rgba(212, 176, 106, 0.25));
+}
+
+/* Precision CAD Corner Registration Brackets */
+.about-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 4;
+  border-color: rgba(212, 176, 106, 0.55);
+  border-style: solid;
+  transition: all 0.4s var(--ease);
+}
+.about-corner.c-tl { top: 1rem; left: 1rem; border-width: 1.5px 0 0 1.5px; }
+.about-corner.c-tr { top: 1rem; right: 1rem; border-width: 1.5px 1.5px 0 0; }
+.about-corner.c-br { bottom: 1rem; right: 1rem; border-width: 0 1.5px 1.5px 0; }
+.about-corner.c-bl { bottom: 1rem; left: 1rem; border-width: 0 0 1.5px 1.5px; }
+.about-frame:hover .about-corner {
+  border-color: var(--brass);
+  box-shadow: 0 0 8px rgba(212, 176, 106, 0.45);
+}
 .about-badge { position: absolute; left: 1rem; bottom: 1rem; max-width: 16rem; display: grid; gap: 0.1rem; padding: 0.85rem 1.15rem; border-radius: 20px; background: rgba(8, 13, 23, 0.8); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
 .about-badge strong { font-family: var(--serif); font-weight: 600; font-size: 1.9rem; line-height: 1.1; color: var(--brass); }
 .about-badge span { font-size: 0.9rem; color: var(--ink-2); line-height: 1.4; font-weight: 600; }
