@@ -209,8 +209,7 @@ toTop?.addEventListener('click', () => scrollTo({ top: 0, behavior: reduced.matc
 function onScroll() {
   const max = root.scrollHeight - innerHeight;
   const p = max > 0 ? clamp(scrollY / max) : 0;
-  const vel = scrollY - prevY; prevY = scrollY;
-  if (marqueeEl && !reduced.matches) marqueeEl.style.setProperty('--skew', `${clamp(-vel * 0.14, -9, 9)}deg`);
+  prevY = scrollY;
   ctaBar?.classList.toggle('is-on', !ctaDismissed && ['services', 'work', 'about'].includes(currentId));
   root.classList.toggle('in-contact', currentId === 'contact');
   root.classList.toggle('at-top', scrollY < 420);
@@ -222,7 +221,7 @@ function onScroll() {
   if (readout) readout.textContent = `${Math.round(scrollY * 2.4).toLocaleString('en-IN')} mm`;
   header.classList.toggle('is-scrolled', scrollY > 24);
   root.classList.add('is-scrolling');
-  clearTimeout(scrollTimer); scrollTimer = setTimeout(() => { root.classList.remove('is-scrolling'); marqueeEl?.style.setProperty('--skew', '0deg'); }, 260);
+  clearTimeout(scrollTimer); scrollTimer = setTimeout(() => { root.classList.remove('is-scrolling'); }, 260);
   updateProcess();
   ticking = false;
 }
@@ -650,14 +649,14 @@ document.addEventListener('click', (e) => {
   hit.addEventListener('pointerleave', () => btn.classList.remove('is-lens'));
 })();
 
-/* ---- Kinetic marquee: JS-driven, speeds up with scrolling and flips direction when you scroll up ---- */
+/* ---- Services marquee: Constant calm luxury pace, zero scroll acceleration ---- */
 (function kineticMarquee() {
   const section = $('[data-marquee]');
   const rows = $$('.marquee-row[data-mq-speed]', section || document);
   if (!section || !rows.length || reduced.matches) return;
   const items = rows.map((row) => {
     const lane = $('.marquee-lane', row);
-    return { row, lane, track: $('.marquee-track', lane), w: 0, x: 0, k: 1, dir: Number(row.dataset.mqDir) || -1, speed: Number(row.dataset.mqSpeed) || 60 };
+    return { row, lane, track: $('.marquee-track', lane), w: 0, x: 0, k: 1, dir: Number(row.dataset.mqDir) || -1, speed: Number(row.dataset.mqSpeed) || 24 };
   });
   const fit = () => items.forEach((s) => {
     $$('[data-clone]', s.lane).forEach((n) => n.remove());
@@ -672,19 +671,17 @@ document.addEventListener('click', (e) => {
   fit();
   document.fonts?.ready.then(fit);
   let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fit, 150); });
-  let visible = true, last = performance.now(), prev = scrollY, boost = 0, flip = 1, want = 1;
+  let visible = true, last = performance.now();
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { rootMargin: '150px' }).observe(section);
   (function frame(now) {
     const dt = Math.min((now - last) / 1000, 0.05); last = now;
-    const dy = scrollY - prev; prev = scrollY;
     if (visible) {
-      boost += (Math.min(Math.abs(dy), 70) * 16 - boost) * 0.12;
-      if (Math.abs(dy) > 1) want = Math.sign(dy);
-      flip += (want - flip) * 0.07;
       items.forEach((s) => {
         if (!s.w) return;
-        s.k += ((s.row.matches(':hover') ? 0.1 : 1) - s.k) * 0.1;
-        s.x += s.dir * flip * (s.speed + boost) * s.k * dt;
+        // Gentle slowdown when hovering on desktop
+        s.k += ((s.row.matches(':hover') ? 0.3 : 1) - s.k) * 0.1;
+        // Constant, steady velocity: NO scroll boost, NO direction flipping
+        s.x += s.dir * s.speed * s.k * dt;
         if (s.x <= -s.w) s.x += s.w; else if (s.x > 0) s.x -= s.w;
         s.lane.style.transform = `translate3d(${s.x.toFixed(2)}px,0,0)`;
       });

@@ -1,7 +1,36 @@
 /* ==========================================================
    Sai Sreenivasa Decorin — Interior technical services
-   Midnight navy · champagne gold · Fraunces + Manrope
+   Midnight navy · champagne gold · Satoshi typography
    ========================================================== */
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('assets/fonts/satoshi-400.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('assets/fonts/satoshi-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('assets/fonts/satoshi-700.woff2') format('woff2');
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('assets/fonts/satoshi-900.woff2') format('woff2');
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @property --r { syntax: "<length>"; inherits: false; initial-value: 0px; }
@@ -27,8 +56,8 @@
   --steel: #7f9cc4;
   --glass: rgba(255, 255, 255, 0.055);
   --glass-2: rgba(255, 255, 255, 0.09);
-  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sans: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -62,10 +91,11 @@ h1, h2, h3, p, dl, dd, figure { margin: 0; }
 .ico { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
 /* ---------- Typography ---------- */
-h1, h2 { font-family: var(--serif); font-weight: 600; line-height: 1.06; letter-spacing: -0.025em; text-wrap: balance; color: var(--ink); }
+h1, h2 { font-family: var(--serif); font-weight: 700; line-height: 1.08; letter-spacing: -0.03em; text-wrap: balance; color: var(--ink); }
 h1 { font-size: clamp(2.3rem, 4vw, 3.7rem); }
-.h1-line { display: block; }h2 { font-size: clamp(2rem, 3.9vw, 3.3rem); line-height: 1.1; }
-h3 { font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; font-size: 1.2rem; }
+.h1-line { display: block; }
+h2 { font-size: clamp(2rem, 3.9vw, 3.3rem); line-height: 1.12; }
+h3 { font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; font-size: 1.25rem; }
 .lead { color: var(--ink-2); font-size: clamp(1.06rem, 1.35vw, 1.2rem); max-width: 62ch; line-height: 1.7; }
 .role { color: var(--brass); font-weight: 700; font-size: 0.95rem; }
 .section-head { position: relative; display: grid; gap: 1rem; margin-bottom: clamp(2rem, 4.5vw, 3.4rem); max-width: 52rem; }
@@ -880,30 +910,43 @@ html:not(.js) .preloader { display: none; }
 @keyframes flipIn { from { opacity: 0; transform: translateY(-60%) scale(0.7); } }
 @keyframes flipUp { from { opacity: 0; transform: translateY(8px); } }
 
-/* ---------- Kinetic services band ---------- */
-.marquee { --skew: 0deg; position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.6rem; padding-block: 2rem; margin-block: 1rem 0; border-block: 1px solid var(--line); background: linear-gradient(180deg, rgba(8, 33, 27, 0.55), rgba(9, 14, 25, 0.7) 45%, rgba(9, 14, 25, 0.7)); overflow: hidden; }
+/* ---------- Services marquee (calm, steady, luxury architectural pace) ---------- */
+.marquee { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.35rem; padding-block: 2rem; margin-block: 1rem 0; border-block: 1px solid var(--line); background: linear-gradient(180deg, rgba(8, 33, 27, 0.45), rgba(9, 14, 25, 0.7) 45%, rgba(9, 14, 25, 0.7)); overflow: hidden; }
 .marquee::before { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 120% at 50% 0%, rgba(212, 176, 106, 0.12), transparent 70%); pointer-events: none; }
-.marquee-row { position: relative; display: flex; min-width: 0; overflow: hidden; transform: skewX(var(--skew)); transition: transform 0.6s var(--ease); will-change: transform; backface-visibility: hidden; }
+.marquee-row { position: relative; display: flex; min-width: 0; overflow: hidden; will-change: transform; backface-visibility: hidden; }
 .marquee-lane { display: flex; width: max-content; will-change: transform; backface-visibility: hidden; }
 .marquee:hover .marquee-lane, .marquee:focus-within .marquee-lane { filter: brightness(1.03); }
-.marquee-track { display: flex; align-items: center; flex: none; gap: 1.7rem; padding-right: 1.7rem; }
-.mq-big, .mq-caps { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); }
-/* row 1 — large serif names, alternating solid / outline, with ringed icon badges */
-.mq-big .mq-w { font-family: var(--serif); font-weight: 600; font-size: clamp(2.3rem, 5vw, 4.2rem); line-height: 1.1; letter-spacing: -0.025em; white-space: nowrap; color: var(--ink); transition: color 0.35s, -webkit-text-stroke-color 0.35s, translate 0.4s var(--ease); cursor: default; }
-.mq-big .mq-w:nth-of-type(even) { color: transparent; -webkit-text-stroke: 1.5px var(--brass); }
-.mq-big .mq-w:hover { color: var(--brass-2); -webkit-text-stroke-color: transparent; translate: 0 -4px; }
-.mq-ico { display: grid; place-items: center; flex: none; width: 3.4rem; height: 3.4rem; border-radius: 50%; font-size: 1.45rem; color: var(--brass-2); border: 1.5px solid transparent; background: linear-gradient(#0b1424, #0b1424) padding-box, conic-gradient(from var(--ang), var(--brass), rgba(212, 176, 106, 0.08) 40%, var(--brass-2) 70%, var(--brass)) border-box; box-shadow: 0 0 26px rgba(212, 176, 106, 0.18); }
-/* row 2 — brass ribbon, tilted, with a travelling sheen */
-.mq-ribbon { rotate: -1.3deg; scale: 1.04; padding-block: 0.85rem; background: linear-gradient(100deg, #a98446, #f1e0b8 38%, #d4b06a 62%, #a98446); box-shadow: 0 18px 50px -14px rgba(212, 176, 106, 0.5), 0 -1px 0 rgba(255, 255, 255, 0.5) inset; overflow: hidden; }
+.marquee-track { display: flex; align-items: center; flex: none; gap: 1.8rem; padding-right: 1.8rem; }
+.mq-big, .mq-caps { -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+
+/* row 1 — refined architectural service names with elegant circular icon badges */
+.mq-big { padding-block: 0.15rem; }
+.mq-big .mq-w { font-family: var(--sans); font-weight: 700; font-size: clamp(1.2rem, 1.85vw, 1.65rem); line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; color: var(--ink); transition: color 0.3s, translate 0.3s var(--ease); cursor: default; }
+.mq-big .mq-w:nth-of-type(even) { color: var(--brass-2); }
+.mq-big .mq-w:hover { color: #fff; translate: 0 -2px; }
+.mq-ico { display: grid; place-items: center; flex: none; width: 2.3rem; height: 2.3rem; border-radius: 50%; font-size: 1rem; color: var(--brass-2); background: rgba(212, 176, 106, 0.12); border: 1px solid rgba(212, 176, 106, 0.35); box-shadow: 0 0 16px rgba(212, 176, 106, 0.15); transition: background 0.3s, transform 0.3s var(--ease), border-color 0.3s; }
+.mq-ico:hover { background: var(--brass); color: #1b1306; transform: scale(1.1); }
+
+/* row 2 — brass ribbon, flat, upright (clean modernist typography, NO italic curls) */
+.mq-ribbon { padding-block: 0.75rem; background: linear-gradient(100deg, #a98446, #f1e0b8 38%, #d4b06a 62%, #a98446); box-shadow: 0 14px 40px -14px rgba(212, 176, 106, 0.45), 0 -1px 0 rgba(255, 255, 255, 0.5) inset; overflow: hidden; }
 .mq-ribbon::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%); transform: translateX(-120%); animation: lightSweep 6s ease-in-out infinite; pointer-events: none; }
-.mq-ribbon .mq-w { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: clamp(1.25rem, 2.3vw, 1.85rem); white-space: nowrap; color: #1b1306; }
-.mq-star { flex: none; font-style: normal; font-size: 1.2rem; line-height: 1; color: #3b2a0c; display: inline-block; animation: spin 7s linear infinite; }
+.mq-ribbon .mq-w { font-family: var(--sans); font-weight: 800; font-style: normal; font-size: clamp(0.92rem, 1.25vw, 1.15rem); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; color: #1b1306; }
+.mq-star { flex: none; font-style: normal; font-size: 1rem; line-height: 1; color: #3b2a0c; display: inline-block; animation: spin 8s linear infinite; }
+
 /* row 3 — photo capsules */
-.mq-cap { display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.4rem 1.4rem 0.4rem 0.4rem; border-radius: 999px; white-space: nowrap; font-weight: 700; font-size: 1.05rem; color: var(--ink); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line-2); transition: border-color 0.3s, background 0.3s, translate 0.4s var(--ease), color 0.3s; }
-.mq-cap img { width: 3.1rem; height: 3.1rem; border-radius: 50%; object-fit: cover; transition: scale 0.5s var(--ease); }
-.mq-cap:hover { border-color: var(--brass); background: rgba(212, 176, 106, 0.14); color: var(--brass-2); translate: 0 -4px; }
-.mq-cap:hover img { scale: 1.15; }
-@media (max-width: 640px) { .marquee { padding-block: 1.4rem; gap: 0.8rem; } .mq-ico { width: 2.6rem; height: 2.6rem; font-size: 1.15rem; } .mq-cap img { width: 2.6rem; height: 2.6rem; } .mq-cap { font-size: 0.95rem; } }
+.mq-cap { display: inline-flex; align-items: center; gap: 0.75rem; padding: 0.35rem 1.25rem 0.35rem 0.35rem; border-radius: 999px; white-space: nowrap; font-weight: 700; font-size: 0.98rem; color: var(--ink); background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line-2); transition: border-color 0.3s, background 0.3s, translate 0.4s var(--ease), color 0.3s; }
+.mq-cap img { width: 2.8rem; height: 2.8rem; border-radius: 50%; object-fit: cover; transition: scale 0.5s var(--ease); }
+.mq-cap:hover { border-color: var(--brass); background: rgba(212, 176, 106, 0.14); color: var(--brass-2); translate: 0 -3px; }
+.mq-cap:hover img { scale: 1.12; }
+@media (max-width: 640px) {
+  .marquee { padding-block: 1.4rem; gap: 0.9rem; }
+  .mq-big .mq-w { font-size: 1.15rem; }
+  .mq-ico { width: 2.0rem; height: 2.0rem; font-size: 0.88rem; }
+  .mq-ribbon { padding-block: 0.6rem; }
+  .mq-ribbon .mq-w { font-size: 0.88rem; }
+  .mq-cap { font-size: 0.88rem; padding: 0.3rem 1rem 0.3rem 0.3rem; }
+  .mq-cap img { width: 2.2rem; height: 2.2rem; }
+}
 @media (prefers-reduced-motion: reduce) { .marquee-lane { transform: none !important; } }
 
 /* ---------- Image reveal + card depth ---------- */

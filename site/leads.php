@@ -86,9 +86,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lead Vault — Sai Sreenivasa Decorin</title>
   <link rel="icon" type="image/png" sizes="128x128" href="assets/favicon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600&display=swap" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap" />
   <style>
     :root {
       --bg: #070c16;
@@ -127,7 +125,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
       box-shadow: 0 24px 60px rgba(0,0,0,0.6);
     }
     .login-logo { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 1.2rem; border: 1px solid var(--brass); }
-    .login-title { font-family: 'Fraunces', serif; font-size: 1.45rem; color: var(--brass-2); margin-bottom: 0.4rem; }
+    .login-title { font-family: 'Satoshi', sans-serif; font-weight: 700; font-size: 1.45rem; color: var(--brass-2); margin-bottom: 0.4rem; }
     .login-sub { font-size: 0.88rem; color: var(--mute); margin-bottom: 1.6rem; }
     .input-pass {
       width: 100%;
@@ -174,7 +172,7 @@ if ($isAuthed && isset($_GET['export']) && $_GET['export'] === 'csv') {
     }
     .dash-brand { display: flex; align-items: center; gap: 1rem; }
     .dash-brand img { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--brass); }
-    .dash-brand h1 { font-family: 'Fraunces', serif; font-size: 1.3rem; color: var(--brass-2); }
+    .dash-brand h1 { font-family: 'Satoshi', sans-serif; font-weight: 700; font-size: 1.3rem; color: var(--brass-2); }
     .dash-brand p { font-size: 0.82rem; color: var(--mute); }
     .dash-actions { display: flex; align-items: center; gap: 0.6rem; }
     .btn-action {

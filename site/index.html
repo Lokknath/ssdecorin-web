@@ -40,12 +40,12 @@
       "priceRange": "₹₹"
     }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" />
-    <link rel="stylesheet" href="styles.css?v=20261107-1440" />
+    <link rel="preload" href="assets/fonts/satoshi-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap" />
+    <link rel="stylesheet" href="styles.css?v=20261107-1450" />
     <script>document.documentElement.classList.add('js');</script>
-    <script src="script.js?v=20261107-1440" defer></script>
+    <script src="script.js?v=20261107-1450" defer></script>
   </head>
   <body>
     <!-- Icon sprite -->
@@ -363,10 +363,10 @@
         </div>
       </section>
 
-      <!-- KINETIC SERVICES BAND (skews with scroll speed) -->
+      <!-- KINETIC SERVICES BAND (constant slow luxury pace) -->
       <section class="marquee" aria-label="Our services" data-marquee>
-        <!-- row 1: big service names with icon badges (scrolls left) -->
-        <div class="marquee-row mq-big" data-mq-speed="70" data-mq-dir="-1">
+        <!-- row 1: refined service names with icon badges (scrolls left) -->
+        <div class="marquee-row mq-big" data-mq-speed="26" data-mq-dir="-1">
           <div class="marquee-lane"><div class="marquee-track">
             <span class="mq-w">Site Measurement</span><i class="mq-ico"><svg class="ico"><use href="#i-ruler" /></svg></i>
             <span class="mq-w">Interio Check</span><i class="mq-ico"><svg class="ico"><use href="#i-check-list" /></svg></i>
@@ -376,8 +376,8 @@
             <span class="mq-w">Homeowner Consultant</span><i class="mq-ico"><svg class="ico"><use href="#i-user" /></svg></i>
           </div></div>
         </div>
-        <!-- row 2: brass ribbon with key facts (scrolls right, tilted) -->
-        <div class="marquee-row mq-ribbon" aria-hidden="true" data-mq-speed="90" data-mq-dir="1">
+        <!-- row 2: brass ribbon with key facts (scrolls right) -->
+        <div class="marquee-row mq-ribbon" aria-hidden="true" data-mq-speed="22" data-mq-dir="1">
           <div class="marquee-lane"><div class="marquee-track">
             <span class="mq-w">Online across India</span><i class="mq-star">✦</i>
             <span class="mq-w">On-site in Hyderabad</span><i class="mq-star">✦</i>
@@ -386,8 +386,8 @@
             <span class="mq-w">10+ years of experience</span><i class="mq-star">✦</i>
           </div></div>
         </div>
-        <!-- row 3: photo capsules (scrolls left, slower) -->
-        <div class="marquee-row mq-caps" aria-hidden="true" data-mq-speed="46" data-mq-dir="-1">
+        <!-- row 3: photo capsules (scrolls left, calm pace) -->
+        <div class="marquee-row mq-caps" aria-hidden="true" data-mq-speed="18" data-mq-dir="-1">
           <div class="marquee-lane"><div class="marquee-track">
             <span class="mq-cap"><img src="https://images.unsplash.com/photo-1716698288217-2a2b6c042a2c?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Measure on site</span>
             <span class="mq-cap"><img src="https://images.unsplash.com/photo-1772475385442-9e2c59cab288?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Check the finish</span>
