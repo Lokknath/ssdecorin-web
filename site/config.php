@@ -6,6 +6,9 @@
 
 declare(strict_types=1);
 
+// Set default timezone to Indian Standard Time (IST, UTC+5:30) across the site
+date_default_timezone_set('Asia/Kolkata');
+
 // 1. Auto-load .env file if present
 $envPath = __DIR__ . '/.env';
 if (file_exists($envPath)) {
@@ -25,11 +28,12 @@ if (file_exists($envPath)) {
 
 return [
     // Primary recipient for customer enquiries
-    'admin_email' => 'loknath.surabhi@gmail.com',
+    'admin_email' => 'saisc26@gmail.com',
     'admin_name'  => 'Sai Sreenivasa Decorin Admin',
 
     // All admin emails that receive instant lead alerts
     'admin_emails' => [
+        'saisc26@gmail.com',
         'loknath.surabhi@gmail.com',
         'jacketking.loknath@gmail.com'
     ],

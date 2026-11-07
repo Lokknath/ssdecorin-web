@@ -3,7 +3,7 @@
    ========================================================== */
 
 /* ---- Config (edit here) ---- */
-const CONTACT_EMAIL = 'loknath.surabhi@gmail.com'; // enquiry form recipient (testing) — swap for the client's address before launch
+const CONTACT_EMAIL = 'saisc26@gmail.com'; // enquiry form recipient
 const WHATSAPP_NUMBER = '916363313546';          // international format, no "+"
 const FORM_ENDPOINT = `https://formsubmit.co/ajax/${CONTACT_EMAIL}`;
 const WEB3FORMS_KEY = ''; // optional, more reliable: free access key from web3forms.com (enter CONTACT_EMAIL there). When set, it is used instead of FormSubmit.
@@ -704,6 +704,7 @@ const words = (t) => {
 let currentService = null;
 function renderService(key, dir = 1) {
   const s = SERVICES[key]; if (!s) return;
+  $$('video', serviceDialog).forEach((v) => { try { v.pause(); } catch (_) {} });
   const isMobile = window.innerWidth <= 768;
   const idx = serviceKeys.indexOf(key), next = serviceKeys[(idx + 1) % serviceKeys.length];
   const [pid, palt] = SERVICE_PHOTO[key];
@@ -714,8 +715,11 @@ function renderService(key, dir = 1) {
   serviceDialog.style.setProperty('--dir', dir);
   $$('.sm-tab', smTabs).forEach((t) => { const on = t.dataset.smGo === key; t.classList.toggle('is-active', on); t.setAttribute('aria-pressed', on); });
   const imgW = isMobile ? 800 : 1400;
+  const coverHtml = (key === 'check')
+    ? `<figure class="sm-cover sm-cover-video"><video class="sm-video-player" controls playsinline preload="metadata" poster="assets/interio-check-poster.jpg"><source src="assets/interio-check-video.mp4" type="video/mp4" />Your browser does not support HTML5 video.</video><span class="sm-video-badge"><svg class="ico"><use href="#i-play"></use></svg> Interio Check Explainer (3:43)</span></figure>`
+    : `<figure class="sm-cover"><img src="https://images.unsplash.com/${pid}?w=${imgW}&q=75&auto=format&fit=crop" alt="${palt}" /><i class="sm-scan"></i></figure>`;
   serviceBody.innerHTML = `
-    <figure class="sm-cover"><img src="https://images.unsplash.com/${pid}?w=${imgW}&q=75&auto=format&fit=crop" alt="${palt}" /><i class="sm-scan"></i></figure>
+    ${coverHtml}
     <div class="sm-main">
       <div class="sm-head">
         <div class="sm-medal"><svg class="ico"><use href="#${s.icon}"></use></svg></div>
@@ -781,6 +785,9 @@ serviceDialog.addEventListener('keydown', (e) => {
   renderService(nextKey, d);
   const curTab = $(`.sm-tab[data-sm-go="${nextKey}"]`, smTabs);
   if (curTab && smTabs) curTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+});
+serviceDialog.addEventListener('close', () => {
+  $$('video', serviceDialog).forEach((v) => { try { v.pause(); } catch (_) {} });
 });
 document.addEventListener('click', (e) => {
   const open = e.target.closest('[data-service], [data-open-service]');

@@ -430,6 +430,7 @@ if (!is_dir($logDir)) {
 }
 
 $jsonRecord = [
+    'id' => $leadRef,
     'timestamp' => date('c'),
     'status' => 'PENDING',
     'name' => $name,

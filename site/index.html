@@ -43,9 +43,9 @@
     <link rel="preload" href="assets/fonts/satoshi-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="assets/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap" />
-    <link rel="stylesheet" href="styles.css?v=20261107-1521" />
+    <link rel="stylesheet" href="styles.css?v=20261107-1545" />
     <script>document.documentElement.classList.add('js');</script>
-    <script src="script.js?v=20261107-1521" defer></script>
+    <script src="script.js?v=20261107-1545" defer></script>
   </head>
   <body>
     <!-- Icon sprite -->
@@ -54,6 +54,7 @@
         <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4e6c3" /><stop offset="1" stop-color="#a98446" /></linearGradient>
         <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9" /></symbol>
         <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" /></symbol>
+        <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor"/></symbol>
         <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
         <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></symbol>
         <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7" /></symbol>
@@ -339,7 +340,7 @@
             </div>
 
             <div class="stage-name glass" data-cursor="Managing Partner">
-              <div><strong>S. S. Naga Nandan</strong><small>Managing Partner · Mechanical Engineer</small></div>
+              <div><strong>S. S. Naga Nandan</strong><small>Managing Partner</small></div>
               <button class="icon-btn" type="button" aria-label="View profile" data-open-portrait data-cursor="Open"><svg class="ico"><use href="#i-plus" /></svg></button>
             </div>
           </div>
@@ -353,42 +354,6 @@
           <div class="glance-item glass reveal"><span class="g-ico"><svg class="ico"><use href="#i-pin" /></svg></span><div><strong>On-site in <span data-count="2">2</span> cities</strong><small>Hyderabad and Bengaluru, by availability</small></div></div>
           <div class="glance-item glass reveal"><span class="g-ico"><svg class="ico"><use href="#i-rupee" /></svg></span><div><strong>From ₹<span data-count="4">4</span> per sq. ft.</strong><small>Published rates with zero hidden charges</small></div></div>
           <div class="glance-item glass reveal"><span class="g-ico"><svg class="ico"><use href="#i-badge" /></svg></span><div><strong><span data-count="10">10</span>+ years of experience</strong><small>Mechanical engineering &amp; factory interiors</small></div></div>
-        </div>
-      </section>
-
-      <!-- KINETIC SERVICES BAND (constant slow luxury pace) -->
-      <section class="marquee" aria-label="Our services" data-marquee>
-        <!-- row 1: refined service names with icon badges (scrolls left) -->
-        <div class="marquee-row mq-big" data-mq-speed="26" data-mq-dir="-1">
-          <div class="marquee-lane"><div class="marquee-track">
-            <span class="mq-w">Site Measurement</span><i class="mq-ico"><svg class="ico"><use href="#i-ruler" /></svg></i>
-            <span class="mq-w">Interio Check</span><i class="mq-ico"><svg class="ico"><use href="#i-check-list" /></svg></i>
-            <span class="mq-w">Modular Drafting</span><i class="mq-ico"><svg class="ico"><use href="#i-compass" /></svg></i>
-            <span class="mq-w">Interior Training</span><i class="mq-ico"><svg class="ico"><use href="#i-cap" /></svg></i>
-            <span class="mq-w">Vendor Directory</span><i class="mq-ico"><svg class="ico"><use href="#i-pin" /></svg></i>
-            <span class="mq-w">Homeowner Consultant</span><i class="mq-ico"><svg class="ico"><use href="#i-user" /></svg></i>
-          </div></div>
-        </div>
-        <!-- row 2: brass ribbon with key facts (scrolls right) -->
-        <div class="marquee-row mq-ribbon" aria-hidden="true" data-mq-speed="22" data-mq-dir="1">
-          <div class="marquee-lane"><div class="marquee-track">
-            <span class="mq-w">Online across India</span><i class="mq-star">✦</i>
-            <span class="mq-w">On-site in Hyderabad</span><i class="mq-star">✦</i>
-            <span class="mq-w">On-site in Bengaluru</span><i class="mq-star">✦</i>
-            <span class="mq-w">Site measurement from ₹4 per sq. ft.</span><i class="mq-star">✦</i>
-            <span class="mq-w">10+ years of experience</span><i class="mq-star">✦</i>
-          </div></div>
-        </div>
-        <!-- row 3: photo capsules (scrolls left, calm pace) -->
-        <div class="marquee-row mq-caps" aria-hidden="true" data-mq-speed="18" data-mq-dir="-1">
-          <div class="marquee-lane"><div class="marquee-track">
-            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1716698288217-2a2b6c042a2c?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Measure on site</span>
-            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1772475385442-9e2c59cab288?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Check the finish</span>
-            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1580982330720-bd5e0fed108b?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Draft for the factory</span>
-            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1664638413509-6aa486866f9a?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Train your team</span>
-            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1667400104764-a5fd01a919b0?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Source with confidence</span>
-            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1692167457893-2c8ca89392ff?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Guide the homeowner</span>
-          </div></div>
         </div>
       </section>
 
@@ -445,12 +410,16 @@
           </article>
 
           <article class="svc-card spot reveal" data-service="check" tabindex="0" role="button" aria-label="Interio Check — see details" data-cursor="Open">
-            <div class="svc-photo"><img src="https://images.unsplash.com/photo-1772475385442-9e2c59cab288?w=900&q=72&auto=format&fit=crop" alt="Hand opening a timber cabinet drawer to check its fit and finish" loading="lazy" width="900" height="600" /><span class="svc-price">Custom quote</span></div>
+            <div class="svc-photo">
+              <img src="assets/interio-check-poster.jpg" alt="Interio Check interior audit presentation video" loading="lazy" width="900" height="600" />
+              <span class="svc-price">Custom quote</span>
+              <span class="svc-video-pill"><svg class="ico"><use href="#i-play" /></svg> Watch video (3:43)</span>
+            </div>
             <div class="svc-body">
               <div class="svc-title"><span class="svc-icon"><svg class="ico"><use href="#i-check-list" /></svg></span><h3>Interio Check</h3></div>
               <p>An independent 48-point technical inspection. We review contractor quotes, verify delivered materials, and audit finishing quality before you pay.</p>
               <ul class="svc-points"><li>Quotation and BOQ price review</li><li>Material grade &amp; hardware verification</li><li>Actionable snag and defect checklist</li></ul>
-              <span class="svc-more">See details <svg class="ico"><use href="#i-arrow" /></svg></span>
+              <span class="svc-more">See details &amp; video <svg class="ico"><use href="#i-arrow" /></svg></span>
             </div>
           </article>
 
@@ -493,6 +462,42 @@
               <span class="svc-more">See details <svg class="ico"><use href="#i-arrow" /></svg></span>
             </div>
           </article>
+        </div>
+      </section>
+
+      <!-- KINETIC SERVICES BAND (constant slow luxury pace) -->
+      <section class="marquee" aria-label="Our services" data-marquee>
+        <!-- row 1: refined service names with icon badges (scrolls left) -->
+        <div class="marquee-row mq-big" data-mq-speed="26" data-mq-dir="-1">
+          <div class="marquee-lane"><div class="marquee-track">
+            <span class="mq-w">Site Measurement</span><i class="mq-ico"><svg class="ico"><use href="#i-ruler" /></svg></i>
+            <span class="mq-w">Interio Check</span><i class="mq-ico"><svg class="ico"><use href="#i-check-list" /></svg></i>
+            <span class="mq-w">Modular Drafting</span><i class="mq-ico"><svg class="ico"><use href="#i-compass" /></svg></i>
+            <span class="mq-w">Interior Training</span><i class="mq-ico"><svg class="ico"><use href="#i-cap" /></svg></i>
+            <span class="mq-w">Vendor Directory</span><i class="mq-ico"><svg class="ico"><use href="#i-pin" /></svg></i>
+            <span class="mq-w">Homeowner Consultant</span><i class="mq-ico"><svg class="ico"><use href="#i-user" /></svg></i>
+          </div></div>
+        </div>
+        <!-- row 2: brass ribbon with key facts (scrolls right) -->
+        <div class="marquee-row mq-ribbon" aria-hidden="true" data-mq-speed="22" data-mq-dir="1">
+          <div class="marquee-lane"><div class="marquee-track">
+            <span class="mq-w">Online across India</span><i class="mq-star">✦</i>
+            <span class="mq-w">On-site in Hyderabad</span><i class="mq-star">✦</i>
+            <span class="mq-w">On-site in Bengaluru</span><i class="mq-star">✦</i>
+            <span class="mq-w">Site measurement from ₹4 per sq. ft.</span><i class="mq-star">✦</i>
+            <span class="mq-w">10+ years of experience</span><i class="mq-star">✦</i>
+          </div></div>
+        </div>
+        <!-- row 3: photo capsules (scrolls left, calm pace) -->
+        <div class="marquee-row mq-caps" aria-hidden="true" data-mq-speed="18" data-mq-dir="-1">
+          <div class="marquee-lane"><div class="marquee-track">
+            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1716698288217-2a2b6c042a2c?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Measure on site</span>
+            <span class="mq-cap"><img src="assets/interio-check-poster.jpg" alt="" width="80" height="80" loading="lazy" />Check the finish</span>
+            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1580982330720-bd5e0fed108b?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Draft for the factory</span>
+            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1664638413509-6aa486866f9a?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Train your team</span>
+            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1667400104764-a5fd01a919b0?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Source with confidence</span>
+            <span class="mq-cap"><img src="https://images.unsplash.com/photo-1692167457893-2c8ca89392ff?w=160&q=70&auto=format&fit=crop" alt="" width="80" height="80" loading="lazy" />Guide the homeowner</span>
+          </div></div>
         </div>
       </section>
 

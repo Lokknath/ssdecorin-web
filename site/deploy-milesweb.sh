@@ -61,7 +61,7 @@ echo "✓ Created milesweb-deploy.zip ($(du -h milesweb-deploy.zip | cut -f1))"
 # 3. Rsync files using expect
 echo "🚀 Syncing files to MilesWeb server via SSH..."
 /usr/bin/expect <<EOF
-set timeout 60
+set timeout 180
 spawn rsync -avz --delete -e "ssh -p $PORT -o StrictHostKeyChecking=no" \
   --exclude ".env*" \
   --exclude ".git" \
